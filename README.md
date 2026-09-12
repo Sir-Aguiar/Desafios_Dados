@@ -2,6 +2,12 @@
 
 Trabalho da disciplina Fundamentos de Dados para IA (FIC_DEV).
 
+## Equipe
+
+- [Adriano Froes]
+- [Daniel Alves Santos]
+- [Felipe Ferreira Aguiar]
+
 ## Situação Problema
 
 Uma plataforma fictícia disponibiliza cursos, vídeos, artigos, podcasts e outros materiais educacionais. Atualmente, os dados estão distribuídos em diferentes arquivos e formatos, dificultando a identificação dos conteúdos mais procurados, a análise do comportamento dos usuários, a avaliação da qualidade dos materiais, a recomendação de conteúdos relacionados e a construção de indicadores para apoiar decisões.
@@ -97,23 +103,6 @@ A solução deverá apresentar práticas básicas de DataOps:
 | Processamento          | Busca semântica e motor de recomendação.                        |
 | Apresentação           | Apache Superset conectado aos dados consolidados no PostgreSQL. |
 
-## Equipe
-
-- [Adriano Froes]
-- [Daniel Alves Santos]
-- [Felipe Ferreira Aguiar]
-
-## O que o projeto faz
-
-1. Lê três fontes de dados (um CSV e dois JSONs).
-2. Valida e trata os registros.
-3. Armazena em PostgreSQL (dados estruturados) e MongoDB (comentários).
-4. Gera embeddings das descrições com sentence-transformers e guarda no
-   PostgreSQL via pgvector.
-5. Permite busca semântica por linguagem natural.
-6. Gera recomendações de conteúdo para cada usuário.
-7. Consolida métricas em views SQL para o dashboard no Superset.
-
 ## Estrutura
 
 ```
@@ -163,42 +152,7 @@ python -m src.main
 - **Encoding UTF-8 explícito**: os dados têm acentuação em português (ex.: "Inteligência Artificial") e sem isso o Pandas quebra no Windows.
 - **Validação antes de tratamento**: preferimos separar as etapas para deixar claro o que é regra de negócio (validação) e o que é padronização
   (tratamento).
-- **Modelo de embeddings**: `all-MiniLM-L6-v2` do sentence-transformers.
-  Escolhemos por ser leve (~90 MB), multilíngue o suficiente para o
-  português e rápido em CPU. Modelos maiores dariam embeddings melhores
-  mas inviabilizariam a execução em máquinas modestas.
-
-## Requisitos atendidos
-
-RF01 — Execução via python -m src.main + config em YAML + segredos em .env
-RF02 — Leitura das 3 fontes (CSV + 2 JSONs), com contagem de registros
-
-RF03 — Validação com 4 classificações (válido, inválido, incompleto, duplicado) + registro de motivos
-
-RF04 — Tratamento (trim, padronização, conversão de datas, remoção de duplicatas, preservação dos originais)
-
-RF05 — Resumo da ingestão em JSON (dados/processados/resumo_ingestao.json)
-
-## O que já está pronto
-
-Arquivo Função
-src/main.py Orquestra o pipeline
-src/config.py Carrega config.yaml + .env
-src/logger.py Logging estruturado
-src/ingestao.py Leitura + resumo (RF02, RF05)
-src/validacao.py Validação (RF03)
-src/tratamento.py Padronização (RF04)
-Arquivos gerados:
-
-dados/processados/catalogo_tratado.csv
-
-dados/processados/interacoes_tratadas.json
-
-dados/processados/comentarios_tratados.json
-
-dados/processados/resumo_ingestao.json
-
-Saída de sucesso do python -m src.main:
+- **Modelo de embeddings**: `all-MiniLM-L6-v2` do sentence-transformers. Escolhemos por ser leve (~90 MB), multilíngue o suficiente para o português e rápido em CPU. Modelos maiores dariam embeddings melhores mas inviabilizariam a execução em máquinas modestas. **Se quiser usar um modelo maior, basta configurar o EMBEDDING_MODEL e EMBEDDING_DIMENSIONS no .env**
 
 ## O que falta terminar
 
@@ -209,21 +163,14 @@ Saída de sucesso do python -m src.main:
 
 ## Limitações
 
-- A recomendação usa uma fórmula simples (média entre visualização e
-  curtidas, filtrada por conclusão). Não é machine learning de verdade.
-- O modelo de embeddings é pequeno, então buscas muito específicas podem
-  trazer resultados apenas razoáveis.
-- O Superset foi configurado localmente; em outra máquina vai precisar
-  reconectar as fontes.
+- A recomendação usa uma fórmula simples (média entre visualização e curtidas, filtrada por conclusão). Não é machine learning de verdade.
+- O modelo de embeddings é pequeno, então buscas muito específicas podem trazer resultados apenas razoáveis.
+- O Superset foi configurado localmente; em outra máquina vai precisar reconectar as fontes.
 - Não há autenticação — é um projeto de estudo.
 
 ## Limitações conhecidas
 
-- O motor de recomendação usa uma fórmula simples (média de visualização
-  e curtidas, filtrada por conclusão). Não é aprendizado de máquina
-  de verdade.
-- O modelo de embeddings é pequeno, então buscas muito específicas
-  podem trazer resultados apenas razoáveis.
-- O Superset foi configurado localmente; em outra máquina vai precisar
-  reconectar as fontes.
+- O motor de recomendação usa uma fórmula simples (média de visualização e curtidas, filtrada por conclusão). Não é aprendizado de máquina de verdade.
+- O modelo de embeddings é pequeno, então buscas muito específicas podem trazer resultados apenas razoáveis.
+- O Superset foi configurado localmente; em outra máquina vai precisar reconectar as fontes.
 - Não temos autenticação em nada — é um projeto de estudo.
