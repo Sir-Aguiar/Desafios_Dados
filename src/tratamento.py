@@ -234,7 +234,49 @@ class Tratador:
             + str(self.corrigidos["interacoes"])
             + " corrigidos)"
         )
+        self.extrair_ids_usuarios(df)
         return df
+
+    # ------------------------------------------------------------------
+    # Extrair ids unicos de usuario das interacoes tratadas
+    # ------------------------------------------------------------------
+    def extrair_ids_usuarios(self, df=None):
+        """Gera usuario_ids.csv com um id unico por usuario.
+
+        Usa o DataFrame de interacoes ja tratado. Se nao for informado,
+        le dados/processados/interacoes_tratadas.json.
+        """
+        self.logger.info("Extraindo ids unicos de usuario...")
+        if df is None:
+            origem = self.dir_saida / "interacoes_tratadas.json"
+            if not origem.exists():
+                raise FileNotFoundError(
+                    "Arquivo de interacoes tratadas nao encontrado: " + str(origem)
+                )
+            df = pd.read_json(origem, orient="records")
+
+        if "usuario_id" not in df.columns:
+            raise ValueError("Coluna usuario_id nao encontrada nas interacoes.")
+
+        ids = (
+            df["usuario_id"]
+            .dropna()
+            .drop_duplicates()
+            .astype("Int64")
+            .sort_values()
+            .reset_index(drop=True)
+        )
+        destino = self.dir_saida / "usuario_ids.csv"
+        ids.to_frame(name="usuario_id").to_csv(destino, index=False, encoding="utf-8")
+        self.logger.info(
+            "  Usuarios unicos: "
+            + str(len(ids))
+            + " extraidos de "
+            + str(len(df))
+            + " interacoes -> "
+            + str(destino)
+        )
+        return ids
 
     # ------------------------------------------------------------------
     # RF04.3 - Tratar comentarios
@@ -285,3 +327,7 @@ class Tratador:
 
     def get_corrigidos(self):
         return dict(self.corrigidos)
+
+
+if __name__ == "__main__":
+    Tratador().extrair_ids_usuarios()
