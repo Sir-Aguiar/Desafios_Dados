@@ -13,7 +13,7 @@ Legenda:
 |-----------|--------|--------|
 | RF01 | Inicialização e configuração | Concluído |
 | RF02 | Leitura das fontes de dados | Concluído |
-| RF03 | Validação dos dados | Parcial |
+| RF03 | Validação dos dados | Concluído |
 | RF04 | Tratamento e padronização | Parcial |
 | RF05 | Resumo da ingestão | Parcial |
 | RF06 | Persistência no PostgreSQL | Não iniciado |
@@ -82,13 +82,13 @@ As validações deverão contemplar, quando aplicável:
 
 - [x] presença dos campos obrigatórios
 - [x] validade dos identificadores
-- [ ] formato das datas
+- [x] formato das datas
 - [x] domínio dos valores categóricos
 - [x] intervalo das avaliações
 - [x] valores numéricos negativos ou incompatíveis
 - [x] referências a usuários ou conteúdos inexistentes
 
-**Status atual:** parcialmente atendido em `src/validacao.py`. As quatro classificações existem e os motivos são registrados. Ainda falta validar explicitamente o **formato das datas** (hoje a conversão ocorre só no tratamento, com `errors="coerce"`).
+**Status atual:** atendido em `src/validacao.py`. As quatro classificações existem e os motivos são registrados. O formato das datas é validado de forma estrita: `data_publicacao` e `data` em `YYYY-MM-DD`; `data_hora` em `YYYY-MM-DDTHH:MM:SS`.
 
 ---
 
