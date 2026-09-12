@@ -1,0 +1,22 @@
+fontes_dados:
+  catalogo: "dados/brutos/catalogo.csv"
+  interacoes: "dados/brutos/interacoes.json"
+  comentarios: "dados/brutos/comentarios.json"
+
+embeddings:
+  modelo: "sentence-transformers/all-MiniLM-L6-v2"
+  dimensao: 384
+  diretorio_cache: "./.cache/embeddings"
+
+busca_semantica:
+  top_k_padrao: 5
+
+recomendacao:
+  top_n_por_usuario: 5
+  nota_minima_avaliacao_positiva: 4
+  peso_ivis: 0.5
+  peso_icur: 0.5
+
+logs:
+  diretorio: "logs"
+  nivel: "INFO"

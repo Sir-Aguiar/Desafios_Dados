@@ -1,0 +1,12 @@
+﻿venv/
+.venv/
+env/
+.env
+__pycache__/
+*.pyc
+*.pyo
+dados/processados/
+logs/
+.cache/
+dashboard/evidencias/*.png
+dashboard/evidencias/*.jpg
