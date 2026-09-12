@@ -14,7 +14,7 @@ Legenda:
 | RF01 | Inicialização e configuração | Concluído |
 | RF02 | Leitura das fontes de dados | Concluído |
 | RF03 | Validação dos dados | Concluído |
-| RF04 | Tratamento e padronização | Parcial |
+| RF04 | Tratamento e padronização | Concluído |
 | RF05 | Resumo da ingestão | Parcial |
 | RF06 | Persistência no PostgreSQL | Não iniciado |
 | RF07 | Persistência no MongoDB | Não iniciado |
@@ -108,9 +108,9 @@ O sistema deverá:
 
 As decisões de tratamento deverão ser registradas na documentação da solução.
 
-- [ ] registrar as decisões de tratamento na documentação da solução
+- [x] registrar as decisões de tratamento na documentação da solução
 
-**Status atual:** o tratamento está implementado em `src/tratamento.py` e os arquivos tratados vão para `dados/processados/`, sem alterar os originais em `dados/brutos/`. Falta um documento dedicado com as decisões de tratamento (o `README.md` cita algumas, mas não cobre o requisito de documentação).
+**Status atual:** atendido em `src/tratamento.py`. Os arquivos tratados vão para `dados/processados/`, sem alterar os originais em `dados/brutos/`. As decisões (espaços, caixa canônica, datas, numéricos, nulos, duplicatas e o que conta como corrigido) estão em `documentacao/decisoes_tratamento.md`.
 
 ---
 
@@ -123,7 +123,7 @@ Ao final da ingestão, o sistema deverá apresentar e armazenar um resumo conten
 - [x] quantidade de registros inválidos
 - [x] quantidade de registros incompletos
 - [x] quantidade de registros duplicados
-- [ ] quantidade de registros corrigidos
+- [x] quantidade de registros corrigidos
 - [ ] quantidade de registros carregados em cada banco de dados
 - [x] tempo total de processamento
 
@@ -131,7 +131,7 @@ O resumo deverá ser gravado em formato JSON.
 
 - [x] gravar o resumo em formato JSON
 
-**Status atual:** o JSON é gravado em `dados/processados/resumo_ingestao.json`. Os campos de **corrigidos** estão com valor placeholder (`0`). Os campos de **carregados** no PostgreSQL e no MongoDB também ficam em `0` porque a persistência ainda não foi implementada.
+**Status atual:** o JSON é gravado em `dados/processados/resumo_ingestao.json`. Os campos de **corrigidos** passam a vir do tratamento (RF04). Os campos de **carregados** no PostgreSQL e no MongoDB ainda ficam em `0` porque a persistência não foi implementada.
 
 ---
 

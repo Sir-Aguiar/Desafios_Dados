@@ -112,7 +112,7 @@ Desafios_Dados/
   sql/          scripts SQL (criação de tabelas, consultas)
   mongodb/      consultas NoSQL
   dashboard/    prints do Superset
-  documentacao/ kpis.md, uso_da_ia.md
+  documentacao/ decisoes_tratamento.md, kpis.md, uso_da_ia.md
   README.md
   config.yaml   parâmetros
   .env          credenciais (não versionado)
@@ -151,12 +151,13 @@ python -m src.main
 - **`config.yaml` + `.env`**: parâmetros versionáveis ficam no YAML, senhas ficam no `.env` (fora do Git).
 - **Encoding UTF-8 explícito**: os dados têm acentuação em português (ex.: "Inteligência Artificial") e sem isso o Pandas quebra no Windows.
 - **Validação antes de tratamento**: preferimos separar as etapas para deixar claro o que é regra de negócio (validação) e o que é padronização
-  (tratamento).
+  (tratamento). O diagnóstico do RF03 permanece sobre o bruto; o RF04 só padroniza a saída.
+- **Tratamento sem imputação de conteúdo**: nulos de texto, data e avaliação não viram sentinela (`0`, `"nan"`, data de hoje). Categorias usam rótulo canônico *case-insensitive*, não `str.title()` (que quebraria `DevOps & Cloud` e `avaliação`). Detalhes em `documentacao/decisoes_tratamento.md`.
 - **Modelo de embeddings**: `all-MiniLM-L6-v2` do sentence-transformers. Escolhemos por ser leve (~90 MB), multilíngue o suficiente para o português e rápido em CPU. Modelos maiores dariam embeddings melhores mas inviabilizariam a execução em máquinas modestas. **Se quiser usar um modelo maior, basta configurar o EMBEDDING_MODEL e EMBEDDING_DIMENSIONS no .env**
 
 ## O que falta terminar
 
-- Tratamento e padronização (RF04) e resumo de ingestão (RF05).
+- Resumo de ingestão (RF05): campos de carregados no PostgreSQL/MongoDB ainda ficam em `0` (dependem de RF06/RF07).
 - Persistência em PostgreSQL e MongoDB.
 - Embeddings, busca semântica e recomendação.
 - KPIs e dashboard no Superset.

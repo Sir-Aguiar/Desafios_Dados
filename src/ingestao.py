@@ -105,11 +105,13 @@ class Ingestor:
             self.resumo[fonte]["incompletos"] = relatorios_validacao[fonte]["incompletos"]
             self.resumo[fonte]["duplicados"] = relatorios_validacao[fonte]["duplicados"]
 
-        # Corrigidos: dividimos por 3 pois o Tratador soma global
-        # (ajustaremos depois se quisermos mais detalhe)
-        self.resumo["catalogo"]["corrigidos"] = 0  # placeholder
-        self.resumo["interacoes"]["corrigidos"] = 0
-        self.resumo["comentarios"]["corrigidos"] = 0
+        if isinstance(corrigidos, dict):
+            for fonte in ("catalogo", "interacoes", "comentarios"):
+                self.resumo[fonte]["corrigidos"] = int(corrigidos.get(fonte, 0))
+        else:
+            self.resumo["catalogo"]["corrigidos"] = int(corrigidos or 0)
+            self.resumo["interacoes"]["corrigidos"] = 0
+            self.resumo["comentarios"]["corrigidos"] = 0
 
         self.resumo["carregados_postgres"] = carregados_pg
         self.resumo["carregados_mongo"] = carregados_mongo
