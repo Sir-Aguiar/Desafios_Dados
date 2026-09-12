@@ -19,6 +19,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -84,6 +85,9 @@ class Conteudo(Base):
     categoria: Mapped[Categoria] = relationship(back_populates="conteudos")
     interacoes: Mapped[list["Interacao"]] = relationship(back_populates="conteudo")
     recomendacoes: Mapped[list["Recomendacao"]] = relationship(
+        back_populates="conteudo"
+    )
+    embedding: Mapped["EmbeddingConteudo | None"] = relationship(
         back_populates="conteudo"
     )
 
@@ -205,3 +209,28 @@ class Recomendacao(Base):
 
     usuario: Mapped[Usuario] = relationship(back_populates="recomendacoes")
     conteudo: Mapped[Conteudo] = relationship(back_populates="recomendacoes")
+
+
+class EmbeddingConteudo(Base):
+    """Vetor semantico de um conteudo (RF08). Um por conteudo_id."""
+
+    __tablename__ = "embedding_conteudo"
+
+    conteudo_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey(
+            "conteudo.conteudo_id",
+            name="fk_embedding_conteudo",
+            onupdate="RESTRICT",
+            ondelete="CASCADE",
+        ),
+        primary_key=True,
+    )
+    texto_origem: Mapped[str] = mapped_column(Text, nullable=False)
+    modelo: Mapped[str] = mapped_column(String(200), nullable=False)
+    vetor: Mapped[list] = mapped_column(Vector(), nullable=False)
+    gerado_em: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now
+    )
+
+    conteudo: Mapped[Conteudo] = relationship(back_populates="embedding")

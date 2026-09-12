@@ -18,7 +18,7 @@ Legenda:
 | RF05 | Resumo da ingestão | Concluído |
 | RF06 | Persistência no PostgreSQL | Concluído |
 | RF07 | Persistência no MongoDB | Concluído |
-| RF08 | Geração e armazenamento de embeddings | Não iniciado |
+| RF08 | Geração e armazenamento de embeddings | Concluído |
 | RF09 | Busca por similaridade semântica | Não iniciado |
 | RF10 | Geração de recomendações | Não iniciado |
 | RF11 | Persistência das recomendações | Não iniciado |
@@ -194,19 +194,19 @@ A equipe deverá justificar a escolha dos dados armazenados no MongoDB.
 
 O sistema deverá:
 
-- [ ] utilizar o título e a descrição dos conteúdos para gerar uma representação textual
-- [ ] gerar um embedding para cada conteúdo válido
-- [ ] associar o embedding ao identificador do conteúdo
-- [ ] armazenar os vetores em PostgreSQL com pgvector
-- [ ] evitar a geração duplicada de embeddings para o mesmo conteúdo
-- [ ] registrar o modelo utilizado para gerar os vetores
+- [x] utilizar o título e a descrição dos conteúdos para gerar uma representação textual
+- [x] gerar um embedding para cada conteúdo válido
+- [x] associar o embedding ao identificador do conteúdo
+- [x] armazenar os vetores em PostgreSQL com pgvector
+- [x] evitar a geração duplicada de embeddings para o mesmo conteúdo
+- [x] registrar o modelo utilizado para gerar os vetores
 
 A equipe deverá documentar o modelo de embeddings e a estratégia de preparação dos textos.
 
-- [ ] documentar o modelo de embeddings
-- [ ] documentar a estratégia de preparação dos textos
+- [x] documentar o modelo de embeddings
+- [x] documentar a estratégia de preparação dos textos
 
-**Status atual:** não iniciado. O modelo `sentence-transformers/all-MiniLM-L6-v2` já está declarado em `config.yaml` e citado no `README.md`, mas não há geração nem armazenamento dos vetores. O módulo `src/busca_semantica.py` está vazio.
+**Status atual:** atendido em `src/embeddings.py`. O texto é a concatenação de título e descrição. Só entram conteúdos já persistidos em `conteudo` (RF06). Cada vetor é gravado em `embedding_conteudo` com `conteudo_id` (PK/FK), `modelo` e `texto_origem`. Recargas reaproveitam o vetor se modelo e texto não mudaram. O DDL está em `sql/criar_embeddings.sql` (extensão `vector` + índice HNSW). Decisões em `documentacao/modelo_embeddings.md`.
 
 ---
 
@@ -377,7 +377,7 @@ Durante a execução, o sistema deverá registrar:
 - [x] quantidade de registros lidos
 - [x] registros rejeitados
 - [x] falhas de conexão
-- [ ] falhas na geração de embeddings
+- [x] falhas na geração de embeddings
 - [x] falhas de persistência
 - [ ] tempo de execução das principais etapas
 
@@ -385,4 +385,4 @@ O registro deverá permitir identificar a origem e a causa provável de cada pro
 
 - [x] identificar origem e causa provável nos logs já existentes (leitura, validação e persistência)
 
-**Status atual:** parcialmente atendido. Há logging em arquivo (`logs/pipeline.log`) e no console, com início/fim, arquivos lidos, contagens e motivos de rejeição. Falhas de conexão e de persistência no PostgreSQL (`src/persistencia.py`) e no MongoDB (`src/persistencia_mongo.py`) são registradas. Ainda faltam logs de embeddings e o tempo por etapa (hoje só o tempo total do pipeline).
+**Status atual:** parcialmente atendido. Há logging em arquivo (`logs/pipeline.log`) e no console, com início/fim, arquivos lidos, contagens e motivos de rejeição. Falhas de conexão e de persistência no PostgreSQL (`src/persistencia.py`) e no MongoDB (`src/persistencia_mongo.py`) são registradas. Falhas na geração de embeddings (conexão, DDL, carga do modelo e `encode`) são registradas em `src/embeddings.py`. Ainda falta o tempo por etapa (hoje só o tempo total do pipeline).

@@ -30,9 +30,14 @@ def load_config():
     LOCAL_EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
     LOCAL_EMBEDDING_DIMENSIONS = os.getenv("EMBEDDING_DIMENSIONS")
 
-    if LOCAL_EMBEDDING_MODEL and LOCAL_EMBEDDING_DIMENSIONS:
-        config["embeddings"]["modelo"] = LOCAL_EMBEDDING_MODEL
-        config["embeddings"]["dimensao"] = LOCAL_EMBEDDING_DIMENSIONS
+    config["embeddings"]["dimensao"] = int(config["embeddings"]["dimensao"])
+
+    if LOCAL_EMBEDDING_MODEL:
+        config["embeddings"]["modelo"] = LOCAL_EMBEDDING_MODEL.strip().strip('"').strip(
+            "'"
+        )
+    if LOCAL_EMBEDDING_DIMENSIONS:
+        config["embeddings"]["dimensao"] = int(LOCAL_EMBEDDING_DIMENSIONS)
 
     # Configurações de PostgreSQL
     config["postgres"] = {

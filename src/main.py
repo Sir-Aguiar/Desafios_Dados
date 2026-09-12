@@ -12,6 +12,7 @@ from src.validacao import Validador
 from src.tratamento import Tratador
 from src.persistencia import PersistenciaPostgres
 from src.persistencia_mongo import PersistenciaMongo
+from src.embeddings import GeradorEmbeddings
 
 
 def main():
@@ -61,6 +62,12 @@ def main():
             persistencia_mongo.fechar()
         logger.info("Documentos enviados ao MongoDB: " + str(carregados_mongo))
 
+        # ---------- FASE 2: Embeddings (RF08) ----------
+        logger.info("[FASE 2] Geracao de embeddings (RF08)")
+        gerador_embeddings = GeradorEmbeddings()
+        resultado_emb = gerador_embeddings.gerar()
+        logger.info("Embeddings: " + str(resultado_emb))
+
         # ---------- FASE 2: Resumo (RF05) ----------
         logger.info("[FASE 2] Consolidando resumo da ingestao (RF05)")
         duracao = round(time.time() - inicio, 2)
@@ -75,7 +82,6 @@ def main():
 
         # ---------- STUBS ----------
         logger.info("-" * 60)
-        logger.info("[STUB] Embeddings (RF08) ............ nao implementado")
         logger.info("[STUB] Busca semantica (RF09) ....... nao implementado")
         logger.info("[STUB] Recomendacao (RF10) .......... nao implementado")
         logger.info("[STUB] KPIs (RF12) .................. nao implementado")
