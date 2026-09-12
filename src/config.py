@@ -69,3 +69,9 @@ def postgres_url(config=None):
     porta = pg.get("port") or "5432"
     banco = pg.get("dbname") or ""
     return f"postgresql+psycopg2://{usuario}:{senha}@{host}:{porta}/{banco}"
+
+
+def mongo_uri(config=None):
+    """Devolve a URI do MongoDB definida no .env."""
+    mongo = (config or load_config())["mongo"]
+    return mongo.get("uri") or "mongodb://localhost:27017/"

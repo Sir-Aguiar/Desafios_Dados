@@ -15,9 +15,9 @@ Legenda:
 | RF02 | Leitura das fontes de dados | Concluído |
 | RF03 | Validação dos dados | Concluído |
 | RF04 | Tratamento e padronização | Concluído |
-| RF05 | Resumo da ingestão | Parcial |
+| RF05 | Resumo da ingestão | Concluído |
 | RF06 | Persistência no PostgreSQL | Concluído |
-| RF07 | Persistência no MongoDB | Não iniciado |
+| RF07 | Persistência no MongoDB | Concluído |
 | RF08 | Geração e armazenamento de embeddings | Não iniciado |
 | RF09 | Busca por similaridade semântica | Não iniciado |
 | RF10 | Geração de recomendações | Não iniciado |
@@ -124,14 +124,14 @@ Ao final da ingestão, o sistema deverá apresentar e armazenar um resumo conten
 - [x] quantidade de registros incompletos
 - [x] quantidade de registros duplicados
 - [x] quantidade de registros corrigidos
-- [ ] quantidade de registros carregados em cada banco de dados
+- [x] quantidade de registros carregados em cada banco de dados
 - [x] tempo total de processamento
 
 O resumo deverá ser gravado em formato JSON.
 
 - [x] gravar o resumo em formato JSON
 
-**Status atual:** o JSON é gravado em `dados/processados/resumo_ingestao.json`. Os campos de **corrigidos** vêm do tratamento (RF04). `carregados_postgres` é preenchido na carga do RF06. `carregados_mongo` permanece `0` até o RF07.
+**Status atual:** o JSON é gravado em `dados/processados/resumo_ingestao.json`. Os campos de **corrigidos** vêm do tratamento (RF04). `carregados_postgres` e `carregados_mongo` vêm das cargas do RF06 e do RF07.
 
 ---
 
@@ -168,25 +168,25 @@ A equipe deverá entregar o script SQL utilizado para criar as tabelas.
 
 O sistema deverá armazenar no MongoDB os comentários, avaliações ou outros dados semiestruturados.
 
-- [ ] armazenar comentários, avaliações ou dados semiestruturados no MongoDB
+- [x] armazenar comentários, avaliações ou dados semiestruturados no MongoDB
 
 Cada documento deverá manter a identificação do usuário e do conteúdo ao qual está relacionado.
 
-- [ ] manter `usuario_id` e `conteudo_id` em cada documento
+- [x] manter `usuario_id` e `conteudo_id` em cada documento
 
 A aplicação deverá permitir, no mínimo:
 
-- [ ] inserir documentos
-- [ ] consultar comentários de determinado conteúdo
-- [ ] localizar documentos por tag
-- [ ] filtrar avaliações pela nota
-- [ ] agregar a quantidade de comentários ou avaliações por categoria
+- [x] inserir documentos
+- [x] consultar comentários de determinado conteúdo
+- [x] localizar documentos por tag
+- [x] filtrar avaliações pela nota
+- [x] agregar a quantidade de comentários ou avaliações por categoria
 
 A equipe deverá justificar a escolha dos dados armazenados no MongoDB.
 
-- [ ] justificar a escolha dos dados armazenados no MongoDB
+- [x] justificar a escolha dos dados armazenados no MongoDB
 
-**Status atual:** não iniciado. O MongoDB sobe via Docker, mas não há persistência nem consultas.
+**Status atual:** atendido em `src/persistencia_mongo.py`. A coleção `comentarios` recebe os tratados, com `usuario_id`, `conteudo_id` e `categoria` desnormalizada. Índices e validador estão em `mongodb/indices.js`; consultas de verificação em `mongodb/consultas.js`. A justificativa está em `documentacao/escolha_mongodb.md`.
 
 ---
 
@@ -385,4 +385,4 @@ O registro deverá permitir identificar a origem e a causa provável de cada pro
 
 - [x] identificar origem e causa provável nos logs já existentes (leitura, validação e persistência)
 
-**Status atual:** parcialmente atendido. Há logging em arquivo (`logs/pipeline.log`) e no console, com início/fim, arquivos lidos, contagens e motivos de rejeição. Falhas de conexão e de persistência no PostgreSQL são registradas em `src/persistencia.py`. Ainda faltam logs de embeddings e o tempo por etapa (hoje só o tempo total do pipeline).
+**Status atual:** parcialmente atendido. Há logging em arquivo (`logs/pipeline.log`) e no console, com início/fim, arquivos lidos, contagens e motivos de rejeição. Falhas de conexão e de persistência no PostgreSQL (`src/persistencia.py`) e no MongoDB (`src/persistencia_mongo.py`) são registradas. Ainda faltam logs de embeddings e o tempo por etapa (hoje só o tempo total do pipeline).

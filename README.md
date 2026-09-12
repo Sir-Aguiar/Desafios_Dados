@@ -112,7 +112,7 @@ Desafios_Dados/
   sql/          scripts SQL (criação de tabelas, consultas)
   mongodb/      consultas NoSQL
   dashboard/    prints do Superset
-  documentacao/ decisoes_tratamento.md, kpis.md, uso_da_ia.md
+  documentacao/ decisoes_tratamento.md, escolha_mongodb.md, kpis.md, uso_da_ia.md
   README.md
   config.yaml   parâmetros
   .env          credenciais (não versionado)
@@ -144,7 +144,7 @@ docker compose up -d
 python -m src.main
 ```
 
-O schema é criado automaticamente na carga (`sql/criar_tabelas.sql`). Consultas manuais: `sql/consultas.sql`.
+O schema PostgreSQL é criado automaticamente na carga (`sql/criar_tabelas.sql`). Consultas manuais: `sql/consultas.sql`. A coleção MongoDB (índices e validador) é aplicada na carga; consultas manuais: `mongodb/consultas.js`.
 
 Se a senha do Postgres no `.env` mudar depois do primeiro `docker compose up`, é preciso recriar o volume (`docker compose down` + apagar `desafios_dados_postgres_data` + `up` de novo).
 
@@ -159,11 +159,10 @@ Se a senha do Postgres no `.env` mudar depois do primeiro `docker compose up`, �
 - **Tratamento sem imputação de conteúdo**: nulos de texto, data e avaliação não viram sentinela (`0`, `"nan"`, data de hoje). Categorias usam rótulo canônico *case-insensitive*, não `str.title()` (que quebraria `DevOps & Cloud` e `avaliação`). Detalhes em `documentacao/decisoes_tratamento.md`.
 - **Modelo de embeddings**: `all-MiniLM-L6-v2` do sentence-transformers. Escolhemos por ser leve (~90 MB), multilíngue o suficiente para o português e rápido em CPU. Modelos maiores dariam embeddings melhores mas inviabilizariam a execução em máquinas modestas. **Se quiser usar um modelo maior, basta configurar o EMBEDDING_MODEL e EMBEDDING_DIMENSIONS no .env**
 - **PostgreSQL (RF06)**: o script `sql/criar_tabelas.sql` é a fonte da verdade do schema (o pipeline o executa). A recarga usa upsert (`ON CONFLICT`), sem truncar. Só entram registros tratados que passam nas regras de integridade. Comentários ficam para o MongoDB (RF07); `recomendacao` é criada vazia.
+- **MongoDB (RF07)**: só comentários/avaliações (tags em array e texto livre). A recarga usa upsert na tripla `(usuario_id, conteudo_id, data)`. A `categoria` é copiada do catálogo na carga para o `$group` do RF07. Detalhes em `documentacao/escolha_mongodb.md`.
 
 ## O que falta terminar
 
-- Resumo de ingestão (RF05): `carregados_mongo` ainda fica em `0` (depende do RF07).
-- Persistência no MongoDB.
 - Embeddings, busca semântica e recomendação.
 - KPIs e dashboard no Superset.
 

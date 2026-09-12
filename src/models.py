@@ -2,6 +2,7 @@
 Models SQLAlchemy 2.0 equivalentes a sql/criar_tabelas.sql (RF06).
 O DDL do arquivo SQL e a fonte da verdade; estes models so mapeiam as tabelas.
 """
+
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -43,9 +44,7 @@ class Usuario(Base):
     usuario_id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     interacoes: Mapped[list["Interacao"]] = relationship(back_populates="usuario")
-    recomendacoes: Mapped[list["Recomendacao"]] = relationship(
-        back_populates="usuario"
-    )
+    recomendacoes: Mapped[list["Recomendacao"]] = relationship(back_populates="usuario")
 
 
 class Conteudo(Base):
