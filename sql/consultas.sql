@@ -67,3 +67,26 @@ FROM conteudo co
 LEFT JOIN embedding_conteudo e ON e.conteudo_id = co.conteudo_id
 WHERE e.conteudo_id IS NULL
 ORDER BY co.conteudo_id;
+
+-- RF09 — vizinhos semanticos de um conteudo ja embeddado (sem gerar vetor da consulta).
+-- A busca em linguagem natural roda em Python (src/busca_semantica.py): o embedding
+-- da frase usa o mesmo modelo do RF08 e a distancia de cosseno (operador <=>).
+-- Similaridade = 1 - distancia. Troque o conteudo_id de referencia se quiser outro tema.
+SELECT
+    ROW_NUMBER() OVER (ORDER BY e.vetor <=> ref.vetor) AS posicao,
+    c.conteudo_id,
+    c.titulo,
+    cat.nome AS categoria,
+    c.tipo,
+    ROUND((1 - (e.vetor <=> ref.vetor))::numeric, 4) AS similaridade,
+    ROUND((e.vetor <=> ref.vetor)::numeric, 4) AS distancia
+FROM embedding_conteudo e
+JOIN conteudo c ON c.conteudo_id = e.conteudo_id
+JOIN categoria cat ON cat.categoria_id = c.categoria_id
+CROSS JOIN (
+    SELECT vetor
+    FROM embedding_conteudo
+    WHERE conteudo_id = 92
+) ref
+ORDER BY e.vetor <=> ref.vetor
+LIMIT 5;

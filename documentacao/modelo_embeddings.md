@@ -58,7 +58,7 @@ Cada vetor é gravado em `embedding_conteudo` com `conteudo_id` como chave prim�
 | `vetor` | `vector(N)` do pgvector, N = dimensão configurada |
 | `gerado_em` | data/hora da geração ou da última atualização |
 
-O índice HNSW em `vetor` usa `vector_cosine_ops`, preparado para a busca do RF09.
+O índice HNSW em `vetor` usa `vector_cosine_ops`, usado pela busca do RF09 (`src/busca_semantica.py`). A consulta em linguagem natural é embeddada com o mesmo modelo; o ranking usa `<=>` (distância de cosseno) e a similaridade exibida é `1 - distância`. Detalhes e as três consultas demonstradas: `documentacao/busca_semantica.md`.
 
 ## 4. Como evitamos gerar de novo o mesmo embedding
 

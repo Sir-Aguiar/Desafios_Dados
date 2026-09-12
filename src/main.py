@@ -13,6 +13,7 @@ from src.tratamento import Tratador
 from src.persistencia import PersistenciaPostgres
 from src.persistencia_mongo import PersistenciaMongo
 from src.embeddings import GeradorEmbeddings
+from src.busca_semantica import BuscadorSemantico
 
 
 def main():
@@ -68,6 +69,15 @@ def main():
         resultado_emb = gerador_embeddings.gerar()
         logger.info("Embeddings: " + str(resultado_emb))
 
+        # ---------- FASE 2: Busca semantica (RF09) ----------
+        logger.info("[FASE 2] Busca semantica (RF09)")
+        buscador = BuscadorSemantico(gerador=gerador_embeddings)
+        resultado_busca = buscador.demonstrar()
+        logger.info(
+            "Consultas semanticas demonstradas: "
+            + str(len(resultado_busca["consultas"]))
+        )
+
         # ---------- FASE 2: Resumo (RF05) ----------
         logger.info("[FASE 2] Consolidando resumo da ingestao (RF05)")
         duracao = round(time.time() - inicio, 2)
@@ -82,7 +92,6 @@ def main():
 
         # ---------- STUBS ----------
         logger.info("-" * 60)
-        logger.info("[STUB] Busca semantica (RF09) ....... nao implementado")
         logger.info("[STUB] Recomendacao (RF10) .......... nao implementado")
         logger.info("[STUB] KPIs (RF12) .................. nao implementado")
         logger.info("-" * 60)

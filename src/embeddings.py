@@ -310,6 +310,10 @@ class GeradorEmbeddings:
             self.dimensao = dim_real
         return self._modelo
 
+    def encode_textos(self, textos):
+        """Vetores normalizados com o mesmo criterio do RF08 (cosine = produto interno)."""
+        return self._encode(textos)
+
     def _encode(self, textos):
         modelo = self._carregar_modelo()
         self.logger.info("Gerando " + str(len(textos)) + " embeddings")

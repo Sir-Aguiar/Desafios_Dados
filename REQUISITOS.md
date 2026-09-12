@@ -19,7 +19,7 @@ Legenda:
 | RF06 | Persistência no PostgreSQL | Concluído |
 | RF07 | Persistência no MongoDB | Concluído |
 | RF08 | Geração e armazenamento de embeddings | Concluído |
-| RF09 | Busca por similaridade semântica | Não iniciado |
+| RF09 | Busca por similaridade semântica | Concluído |
 | RF10 | Geração de recomendações | Não iniciado |
 | RF11 | Persistência das recomendações | Não iniciado |
 | RF12 | Produção de métricas e KPIs | Não iniciado |
@@ -220,24 +220,24 @@ Exemplo de consulta:
 
 Para cada resultado, o sistema deverá apresentar:
 
-- [ ] posição no resultado
-- [ ] identificador do conteúdo
-- [ ] título
-- [ ] categoria
-- [ ] tipo
-- [ ] valor de similaridade ou distância
+- [x] posição no resultado
+- [x] identificador do conteúdo
+- [x] título
+- [x] categoria
+- [x] tipo
+- [x] valor de similaridade ou distância
 
 A quantidade de resultados retornados deverá ser configurável.
 
-- [ ] quantidade de resultados configurável
-- [ ] receber consulta em linguagem natural
-- [ ] retornar os conteúdos semanticamente mais semelhantes
+- [x] quantidade de resultados configurável
+- [x] receber consulta em linguagem natural
+- [x] retornar os conteúdos semanticamente mais semelhantes
 
 A equipe deverá demonstrar pelo menos três consultas semânticas diferentes.
 
-- [ ] demonstrar pelo menos três consultas semânticas diferentes
+- [x] demonstrar pelo menos três consultas semânticas diferentes
 
-**Status atual:** não iniciado. O parâmetro `busca_semantica.top_k_padrao` já existe em `config.yaml`.
+**Status atual:** atendido em `src/busca_semantica.py`. A consulta é embeddada com o mesmo modelo do RF08 e ranqueada no pgvector (`<=>`). Cada item traz posição, `conteudo_id`, título, categoria, tipo, similaridade e distância. O `top_k` vem de `busca_semantica.top_k_padrao`. As três frases de demonstração estão em `config.yaml`; o pipeline e `python -m src.busca_semantica` as executam e gravam `dados/processados/busca_semantica.json`. Detalhes em `documentacao/busca_semantica.md`.
 
 ---
 
