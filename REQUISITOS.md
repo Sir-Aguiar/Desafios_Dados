@@ -16,7 +16,7 @@ Legenda:
 | RF03 | Validação dos dados | Concluído |
 | RF04 | Tratamento e padronização | Concluído |
 | RF05 | Resumo da ingestão | Parcial |
-| RF06 | Persistência no PostgreSQL | Não iniciado |
+| RF06 | Persistência no PostgreSQL | Concluído |
 | RF07 | Persistência no MongoDB | Não iniciado |
 | RF08 | Geração e armazenamento de embeddings | Não iniciado |
 | RF09 | Busca por similaridade semântica | Não iniciado |
@@ -131,7 +131,7 @@ O resumo deverá ser gravado em formato JSON.
 
 - [x] gravar o resumo em formato JSON
 
-**Status atual:** o JSON é gravado em `dados/processados/resumo_ingestao.json`. Os campos de **corrigidos** passam a vir do tratamento (RF04). Os campos de **carregados** no PostgreSQL e no MongoDB ainda ficam em `0` porque a persistência não foi implementada.
+**Status atual:** o JSON é gravado em `dados/processados/resumo_ingestao.json`. Os campos de **corrigidos** vêm do tratamento (RF04). `carregados_postgres` é preenchido na carga do RF06. `carregados_mongo` permanece `0` até o RF07.
 
 ---
 
@@ -141,26 +141,26 @@ O sistema deverá armazenar os dados estruturados no PostgreSQL.
 
 O banco deverá possuir, no mínimo, entidades equivalentes a:
 
-- [ ] usuário
-- [ ] conteúdo
-- [ ] categoria
-- [ ] interação
-- [ ] recomendação
+- [x] usuário
+- [x] conteúdo
+- [x] categoria
+- [x] interação
+- [x] recomendação
 
 A implementação deverá:
 
-- [ ] definir chaves primárias
-- [ ] definir chaves estrangeiras
-- [ ] impedir duplicidades de identificadores
-- [ ] manter a integridade dos relacionamentos
-- [ ] utilizar transações durante a carga
-- [ ] permitir consultar os registros armazenados
+- [x] definir chaves primárias
+- [x] definir chaves estrangeiras
+- [x] impedir duplicidades de identificadores
+- [x] manter a integridade dos relacionamentos
+- [x] utilizar transações durante a carga
+- [x] permitir consultar os registros armazenados
 
 A equipe deverá entregar o script SQL utilizado para criar as tabelas.
 
-- [ ] entregar o script SQL de criação das tabelas
+- [x] entregar o script SQL de criação das tabelas
 
-**Status atual:** não iniciado. O `docker-compose.yml` sobe o PostgreSQL com pgvector, mas não há carga, modelo relacional nem script SQL.
+**Status atual:** atendido. O DDL está em `sql/criar_tabelas.sql` (PK, FK, UNIQUE, CHECK). Os models SQLAlchemy em `src/models.py` espelham o script. A carga em `src/persistencia.py` filtra os tratados, faz upsert transacional (`usuario`, `conteudo`, `interacao`) e consulta `COUNT` após o commit. A tabela `recomendacao` é criada vazia para o RF10/RF11. Consultas manuais em `sql/consultas.sql`.
 
 ---
 
@@ -376,13 +376,13 @@ Durante a execução, o sistema deverá registrar:
 - [x] arquivos processados
 - [x] quantidade de registros lidos
 - [x] registros rejeitados
-- [ ] falhas de conexão
+- [x] falhas de conexão
 - [ ] falhas na geração de embeddings
-- [ ] falhas de persistência
+- [x] falhas de persistência
 - [ ] tempo de execução das principais etapas
 
 O registro deverá permitir identificar a origem e a causa provável de cada problema.
 
-- [x] identificar origem e causa provável nos logs já existentes (leitura e validação)
+- [x] identificar origem e causa provável nos logs já existentes (leitura, validação e persistência)
 
-**Status atual:** parcialmente atendido. Há logging em arquivo (`logs/pipeline.log`) e no console, com início/fim, arquivos lidos, contagens e motivos de rejeição. Ainda faltam registros específicos de falha de conexão, embeddings e persistência (módulos ainda não implementados), além do tempo por etapa (hoje só o tempo total do pipeline).
+**Status atual:** parcialmente atendido. Há logging em arquivo (`logs/pipeline.log`) e no console, com início/fim, arquivos lidos, contagens e motivos de rejeição. Falhas de conexão e de persistência no PostgreSQL são registradas em `src/persistencia.py`. Ainda faltam logs de embeddings e o tempo por etapa (hoje só o tempo total do pipeline).

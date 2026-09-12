@@ -1,5 +1,7 @@
 ﻿import os
 from pathlib import Path
+from urllib.parse import quote_plus
+
 import yaml
 from dotenv import load_dotenv
 
@@ -56,3 +58,14 @@ def load_config():
 
     # Retorna a configuração
     return config
+
+
+def postgres_url(config=None):
+    """Monta a URL SQLAlchemy a partir das credenciais do .env."""
+    pg = (config or load_config())["postgres"]
+    usuario = quote_plus(str(pg.get("user") or ""))
+    senha = quote_plus(str(pg.get("password") or ""))
+    host = pg.get("host") or "localhost"
+    porta = pg.get("port") or "5432"
+    banco = pg.get("dbname") or ""
+    return f"postgresql+psycopg2://{usuario}:{senha}@{host}:{porta}/{banco}"

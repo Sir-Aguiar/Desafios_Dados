@@ -135,14 +135,18 @@ source venv/bin/activate
 # 2. instalar dependências
 pip install -r requirements.txt
 
-# 3. subir bancos
-docker compose up -d
+# 3. criar .env na raiz (POSTGRES_* e MONGO_*)
 
-# 4. criar .env na raiz (ver config.yaml para formato)
+# 4. subir bancos (o Postgres lê as credenciais do .env)
+docker compose up -d
 
 # 5. rodar
 python -m src.main
 ```
+
+O schema é criado automaticamente na carga (`sql/criar_tabelas.sql`). Consultas manuais: `sql/consultas.sql`.
+
+Se a senha do Postgres no `.env` mudar depois do primeiro `docker compose up`, é preciso recriar o volume (`docker compose down` + apagar `desafios_dados_postgres_data` + `up` de novo).
 
 ## Decisões que tomamos
 
@@ -154,11 +158,12 @@ python -m src.main
   (tratamento). O diagnóstico do RF03 permanece sobre o bruto; o RF04 só padroniza a saída.
 - **Tratamento sem imputação de conteúdo**: nulos de texto, data e avaliação não viram sentinela (`0`, `"nan"`, data de hoje). Categorias usam rótulo canônico *case-insensitive*, não `str.title()` (que quebraria `DevOps & Cloud` e `avaliação`). Detalhes em `documentacao/decisoes_tratamento.md`.
 - **Modelo de embeddings**: `all-MiniLM-L6-v2` do sentence-transformers. Escolhemos por ser leve (~90 MB), multilíngue o suficiente para o português e rápido em CPU. Modelos maiores dariam embeddings melhores mas inviabilizariam a execução em máquinas modestas. **Se quiser usar um modelo maior, basta configurar o EMBEDDING_MODEL e EMBEDDING_DIMENSIONS no .env**
+- **PostgreSQL (RF06)**: o script `sql/criar_tabelas.sql` é a fonte da verdade do schema (o pipeline o executa). A recarga usa upsert (`ON CONFLICT`), sem truncar. Só entram registros tratados que passam nas regras de integridade. Comentários ficam para o MongoDB (RF07); `recomendacao` é criada vazia.
 
 ## O que falta terminar
 
-- Resumo de ingestão (RF05): campos de carregados no PostgreSQL/MongoDB ainda ficam em `0` (dependem de RF06/RF07).
-- Persistência em PostgreSQL e MongoDB.
+- Resumo de ingestão (RF05): `carregados_mongo` ainda fica em `0` (depende do RF07).
+- Persistência no MongoDB.
 - Embeddings, busca semântica e recomendação.
 - KPIs e dashboard no Superset.
 

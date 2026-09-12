@@ -10,6 +10,7 @@ from src.logger import get_logger
 from src.ingestao import Ingestor
 from src.validacao import Validador
 from src.tratamento import Tratador
+from src.persistencia import PersistenciaPostgres
 
 
 def main():
@@ -40,17 +41,23 @@ def main():
         # ---------- FASE 1: Tratamento (RF04) ----------
         logger.info("[FASE 1] Tratamento e padronizacao (RF04)")
         tratador = Tratador()
-        tratador.tratar_catalogo(ingestor.df_catalogo)
-        tratador.tratar_interacoes(ingestor.df_interacoes)
+        df_catalogo = tratador.tratar_catalogo(ingestor.df_catalogo)
+        df_interacoes = tratador.tratar_interacoes(ingestor.df_interacoes)
         tratador.tratar_comentarios(ingestor.lista_comentarios)
 
+        # ---------- FASE 2: Persistencia PostgreSQL (RF06) ----------
+        logger.info("[FASE 2] Persistencia PostgreSQL (RF06)")
+        persistencia = PersistenciaPostgres()
+        carregados_pg = persistencia.carregar(df_catalogo, df_interacoes)
+        logger.info("Registros enviados ao PostgreSQL: " + str(carregados_pg))
+
         # ---------- FASE 1: Resumo (RF05) ----------
-        logger.info("[FASE 1] Consolidando resumo da ingestao (RF05)")
+        logger.info("[FASE 2] Consolidando resumo da ingestao (RF05)")
         duracao = round(time.time() - inicio, 2)
         resumo = ingestor.consolidar_resumo(
             relatorios_validacao=validador.get_relatorios(),
             corrigidos=tratador.get_corrigidos(),
-            carregados_pg=0,      # ainda nao carregou
+            carregados_pg=carregados_pg,
             carregados_mongo=0,   # ainda nao carregou
             tempo=duracao,
         )
@@ -58,7 +65,6 @@ def main():
 
         # ---------- STUBS ----------
         logger.info("-" * 60)
-        logger.info("[STUB] PostgreSQL (RF06) ............ nao implementado")
         logger.info("[STUB] MongoDB (RF07) ............... nao implementado")
         logger.info("[STUB] Embeddings (RF08) ............ nao implementado")
         logger.info("[STUB] Busca semantica (RF09) ....... nao implementado")
