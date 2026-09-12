@@ -90,3 +90,107 @@ CROSS JOIN (
 ) ref
 ORDER BY e.vetor <=> ref.vetor
 LIMIT 5;
+
+-- RF10 — sinais usados na geracao (visualizacao, curtida/avaliacao, conclusao).
+-- A pontuacao em si e calculada em Python (src/recomendacao.py):
+--   Pontuacao = ((Ivis + Icur) / 2) * 100 * Iconc
+-- Ivis: cosseno entre o conteudo candidato e o centroide pgvector dos
+--       conteudos consumidos pelo usuario (fallback: tempo na categoria).
+-- Icur: o mesmo, usando curtidas e avaliacoes >= 4.
+-- Iconc: 0 se houver conclusao (ou percentual 100) daquele par usuario/conteudo.
+
+SELECT tipo_interacao, COUNT(*) AS qtd
+FROM interacao
+WHERE tipo_interacao IN ('visualização', 'início', 'conclusão', 'curtida', 'avaliação')
+GROUP BY tipo_interacao
+ORDER BY qtd DESC, tipo_interacao;
+
+SELECT COUNT(*) AS avaliacoes_positivas
+FROM interacao
+WHERE avaliacao_atribuida >= 4;
+
+-- Conteudos concluidos do usuario 3 (Iconc = 0; fora da lista de sugestoes)
+SELECT i.conteudo_id, c.titulo, i.tipo_interacao, i.percentual_conclusao
+FROM interacao i
+JOIN conteudo c ON c.conteudo_id = i.conteudo_id
+WHERE i.usuario_id = 3
+  AND (i.tipo_interacao = 'conclusão' OR i.percentual_conclusao >= 100)
+ORDER BY i.conteudo_id;
+
+-- Ivis ilustrativo via pgvector: vizinhos do centroide de consumo do usuario 3
+WITH perfil AS (
+    SELECT AVG(e.vetor) AS vetor
+    FROM embedding_conteudo e
+    JOIN interacao i ON i.conteudo_id = e.conteudo_id
+    WHERE i.usuario_id = 3
+      AND i.tipo_interacao IN ('visualização', 'início', 'conclusão')
+)
+SELECT
+    ROW_NUMBER() OVER (ORDER BY e.vetor <=> perfil.vetor) AS posicao,
+    c.conteudo_id,
+    c.titulo,
+    cat.nome AS categoria,
+    ROUND((1 - (e.vetor <=> perfil.vetor))::numeric, 4) AS ivis
+FROM embedding_conteudo e
+JOIN conteudo c ON c.conteudo_id = e.conteudo_id
+JOIN categoria cat ON cat.categoria_id = c.categoria_id
+CROSS JOIN perfil
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM interacao i
+    WHERE i.usuario_id = 3
+      AND i.conteudo_id = c.conteudo_id
+      AND (i.tipo_interacao = 'conclusão' OR i.percentual_conclusao >= 100)
+)
+ORDER BY e.vetor <=> perfil.vetor
+LIMIT 5;
+
+-- RF11 — recomendacoes persistidas (geradas pelo RF10).
+-- Cada linha tem usuario_id, conteudo_id, pontuacao, posicao e gerado_em.
+-- Recargas inserem um novo lote (gerado_em distinto); a consulta "atual"
+-- usa o MAX(gerado_em).
+
+SELECT COUNT(*) AS total_recomendacoes FROM recomendacao;
+
+SELECT
+    gerado_em,
+    COUNT(*) AS qtd,
+    COUNT(DISTINCT usuario_id) AS usuarios,
+    COUNT(*) FILTER (WHERE classificacao = 'Positivo') AS positivas,
+    COUNT(*) FILTER (WHERE classificacao = 'Estável') AS estaveis
+FROM recomendacao
+GROUP BY gerado_em
+ORDER BY gerado_em DESC;
+
+SELECT classificacao, COUNT(*) AS qtd
+FROM recomendacao
+WHERE gerado_em = (SELECT MAX(gerado_em) FROM recomendacao)
+GROUP BY classificacao
+ORDER BY classificacao;
+
+-- Ranking persistido do usuario 1 (lote mais recente)
+SELECT
+    r.usuario_id,
+    r.posicao,
+    r.conteudo_id,
+    c.titulo,
+    cat.nome AS categoria,
+    r.pontuacao,
+    r.classificacao,
+    r.gerado_em
+FROM recomendacao r
+JOIN conteudo c ON c.conteudo_id = r.conteudo_id
+JOIN categoria cat ON cat.categoria_id = c.categoria_id
+WHERE r.usuario_id = 1
+  AND r.gerado_em = (SELECT MAX(gerado_em) FROM recomendacao)
+ORDER BY r.posicao;
+
+-- Integridade: nao deve haver conclusao do mesmo par usuario/conteudo no lote atual
+SELECT r.usuario_id, r.conteudo_id, r.posicao
+FROM recomendacao r
+JOIN interacao i
+  ON i.usuario_id = r.usuario_id
+ AND i.conteudo_id = r.conteudo_id
+ AND (i.tipo_interacao = 'conclusão' OR i.percentual_conclusao >= 100)
+WHERE r.gerado_em = (SELECT MAX(gerado_em) FROM recomendacao)
+ORDER BY r.usuario_id, r.posicao;

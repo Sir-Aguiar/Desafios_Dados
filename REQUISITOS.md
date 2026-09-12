@@ -20,8 +20,8 @@ Legenda:
 | RF07 | Persistência no MongoDB | Concluído |
 | RF08 | Geração e armazenamento de embeddings | Concluído |
 | RF09 | Busca por similaridade semântica | Concluído |
-| RF10 | Geração de recomendações | Não iniciado |
-| RF11 | Persistência das recomendações | Não iniciado |
+| RF10 | Geração de recomendações | Concluído |
+| RF11 | Persistência das recomendações | Concluído |
 | RF12 | Produção de métricas e KPIs | Não iniciado |
 | RF13 | Dashboard no Apache Superset | Não iniciado |
 | RF14 | Registro de execução | Parcial |
@@ -160,7 +160,7 @@ A equipe deverá entregar o script SQL utilizado para criar as tabelas.
 
 - [x] entregar o script SQL de criação das tabelas
 
-**Status atual:** atendido. O DDL está em `sql/criar_tabelas.sql` (PK, FK, UNIQUE, CHECK). Os models SQLAlchemy em `src/models.py` espelham o script. A carga em `src/persistencia.py` filtra os tratados, faz upsert transacional (`usuario`, `conteudo`, `interacao`) e consulta `COUNT` após o commit. A tabela `recomendacao` é criada vazia para o RF10/RF11. Consultas manuais em `sql/consultas.sql`.
+**Status atual:** atendido. O DDL está em `sql/criar_tabelas.sql` (PK, FK, UNIQUE, CHECK). Os models SQLAlchemy em `src/models.py` espelham o script. A carga em `src/persistencia.py` filtra os tratados, faz upsert transacional (`usuario`, `conteudo`, `interacao`) e consulta `COUNT` após o commit. A tabela `recomendacao` é criada no DDL e preenchida pelo RF11. Consultas manuais em `sql/consultas.sql`.
 
 ---
 
@@ -247,17 +247,17 @@ O sistema deverá gerar recomendações de conteúdos para um usuário.
 
 A recomendação deverá considerar, no mínimo:
 
-- [ ] conteúdos visualizados
-- [ ] conteúdos curtidos ou bem avaliados
-- [ ] remoção dos conteúdos já concluídos pelo usuário
+- [x] conteúdos visualizados
+- [x] conteúdos curtidos ou bem avaliados
+- [x] remoção dos conteúdos já concluídos pelo usuário
 
 O sistema deverá apresentar, para cada recomendação:
 
-- [ ] usuário
-- [ ] conteúdo recomendado
-- [ ] pontuação
-- [ ] posição
-- [ ] data de geração
+- [x] usuário
+- [x] conteúdo recomendado
+- [x] pontuação
+- [x] posição
+- [x] data de geração
 
 A equipe deverá utilizar a seguinte fórmula.
 
@@ -273,7 +273,7 @@ Pontuação = ((Ivis + Icur) / 2) * 100 * Iconc
 
 Regra básica: a pontuação é a média simples entre o índice de visualização e o de curtidas, multiplicada pelo filtro de conclusão. Varia de 0 a 100.
 
-- [ ] implementar a fórmula `Pontuação = ((Ivis + Icur) / 2) * 100 * Iconc`
+- [x] implementar a fórmula `Pontuação = ((Ivis + Icur) / 2) * 100 * Iconc`
 
 ### Regra de classificação (tipo de recomendação)
 
@@ -283,11 +283,11 @@ Com base na pontuação calculada, o sistema atribui o status da recomendação:
 - **Estável** (40 > pontuação < 70): afinidade moderada. O usuário demonstrou interesse parcial (ou apenas visualizou pouco, ou ainda não avaliou conteúdos semelhantes).
 - **Negativo** (pontuação <= 40 ou Iconc = 0): baixo interesse ou conteúdo já concluído (descartado da lista de sugestões).
 
-- [ ] classificar como Positivo (pontuação >= 70)
-- [ ] classificar como Estável (faixa intermediária de pontuação)
-- [ ] classificar como Negativo (pontuação <= 40 ou Iconc = 0)
+- [x] classificar como Positivo (pontuação >= 70)
+- [x] classificar como Estável (faixa intermediária de pontuação)
+- [x] classificar como Negativo (pontuação <= 40 ou Iconc = 0)
 
-**Status atual:** não iniciado. Parâmetros de recomendação já existem em `config.yaml` (`top_n_por_usuario`, `nota_minima_avaliacao_positiva`, pesos).
+**Status atual:** atendido em `src/recomendacao.py`. Ivis é a similaridade de cosseno no pgvector com o centroide dos conteúdos consumidos (fallback: tempo na categoria). Icur usa o mesmo critério sobre curtidas e avaliações `>= 4`. Iconc zera conteúdos concluídos. Negativo sai da lista de sugestões; Positivo e Estável entram ranqueados até `top_n_por_usuario`. Cada item traz usuário, conteúdo, pontuação, posição, classificação, índices e data de geração. O pipeline e `python -m src.recomendacao` gravam `dados/processados/recomendacoes.json` e persistem o lote no PostgreSQL (RF11). Detalhes em `documentacao/recomendacao.md`.
 
 ---
 
@@ -297,13 +297,13 @@ As recomendações geradas deverão ser armazenadas no PostgreSQL.
 
 Cada recomendação deverá possuir, no mínimo:
 
-- [ ] identificador do usuário
-- [ ] identificador do conteúdo
-- [ ] pontuação final
-- [ ] posição no resultado
-- [ ] data e hora da geração
+- [x] identificador do usuário
+- [x] identificador do conteúdo
+- [x] pontuação final
+- [x] posição no resultado
+- [x] data e hora da geração
 
-**Status atual:** não iniciado. Depende do RF06 (tabela de recomendação) e do RF10 (geração).
+**Status atual:** atendido em `GeradorRecomendacoes.persistir` (`src/recomendacao.py`). O lote do RF10 é gravado na tabela `recomendacao` (DDL do RF06) em transação, com upsert na unicidade `(usuario_id, conteudo_id, gerado_em)`. Depois do commit o pipeline consulta `COUNT` e uma amostra. Consultas manuais em `sql/consultas.sql` (bloco RF11). Detalhes em `documentacao/recomendacao.md`.
 
 ---
 

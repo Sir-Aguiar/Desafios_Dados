@@ -112,7 +112,7 @@ Desafios_Dados/
   sql/          scripts SQL (criação de tabelas, consultas)
   mongodb/      consultas NoSQL
   dashboard/    prints do Superset
-  documentacao/ decisoes_tratamento.md, escolha_mongodb.md, modelo_embeddings.md, busca_semantica.md, kpis.md, uso_da_ia.md
+  documentacao/ decisoes_tratamento.md, escolha_mongodb.md, modelo_embeddings.md, busca_semantica.md, recomendacao.md, kpis.md, uso_da_ia.md
   README.md
   config.yaml   parâmetros
   .env          credenciais (não versionado)
@@ -144,11 +144,14 @@ docker compose up -d
 python -m src.main
 ```
 
-O schema PostgreSQL é criado automaticamente na carga (`sql/criar_tabelas.sql`). Consultas manuais: `sql/consultas.sql`. A coleção MongoDB (índices e validador) é aplicada na carga; consultas manuais: `mongodb/consultas.js`. Depois dos embeddings, o pipeline demonstra a busca semântica (RF09). Para repetir só essa etapa:
+O schema PostgreSQL é criado automaticamente na carga (`sql/criar_tabelas.sql`). Consultas manuais: `sql/consultas.sql`. A coleção MongoDB (índices e validador) é aplicada na carga; consultas manuais: `mongodb/consultas.js`. Depois dos embeddings, o pipeline demonstra a busca semântica (RF09) e gera e persiste as recomendações (RF10/RF11). Para repetir só essas etapas:
 
 ```bash
 python -m src.busca_semantica
 python -m src.busca_semantica "Quero aprender os fundamentos de banco de dados para inteligência artificial."
+
+python -m src.recomendacao
+python -m src.recomendacao 1
 ```
 
 Se a senha do Postgres no `.env` mudar depois do primeiro `docker compose up`, é preciso recriar o volume (`docker compose down` + apagar `desafios_dados_postgres_data` + `up` de novo).
@@ -164,12 +167,12 @@ Se a senha do Postgres no `.env` mudar depois do primeiro `docker compose up`, �
 - **Tratamento sem imputação de conteúdo**: nulos de texto, data e avaliação não viram sentinela (`0`, `"nan"`, data de hoje). Categorias usam rótulo canônico *case-insensitive*, não `str.title()` (que quebraria `DevOps & Cloud` e `avaliação`). Detalhes em `documentacao/decisoes_tratamento.md`.
 - **Modelo de embeddings (RF08)**: `all-MiniLM-L6-v2` do sentence-transformers. Escolhemos por ser leve (~90 MB), multilíngue o suficiente para o português e rápido em CPU. O texto embeddado é título + descrição; o vetor fica em `embedding_conteudo` associado ao `conteudo_id`. Recargas não geram de novo o mesmo par modelo/texto. Detalhes em `documentacao/modelo_embeddings.md`. **Se quiser usar um modelo maior, basta configurar o EMBEDDING_MODEL e EMBEDDING_DIMENSIONS no .env.**
 - **Busca semântica (RF09)**: a frase em português é embeddada com o mesmo modelo e comparada aos vetores no pgvector (distância de cosseno). O `top_k` e as três consultas de demonstração ficam em `config.yaml`. Resultados no log e em `dados/processados/busca_semantica.json`. Detalhes em `documentacao/busca_semantica.md`.
-- **PostgreSQL (RF06)**: o script `sql/criar_tabelas.sql` é a fonte da verdade do schema (o pipeline o executa). A recarga usa upsert (`ON CONFLICT`), sem truncar. Só entram registros tratados que passam nas regras de integridade. Comentários ficam para o MongoDB (RF07); `recomendacao` é criada vazia.
+- **Recomendação (RF10/RF11)**: pontuação `((Ivis + Icur) / 2) * 100 * Iconc`. Ivis e Icur vêm da similaridade de cosseno no pgvector (centroide do histórico de visualização e de curtidas/notas >= 4). Iconc remove concluídos. Positivo (>= 70) e Estável (entre 40 e 70) entram no ranking; Negativo é descartado. `top_n_por_usuario` está no YAML. O JSON vai para `dados/processados/recomendacoes.json`; o lote é gravado na tabela `recomendacao` (transação + upsert). Recargas inserem um novo `gerado_em`. Detalhes em `documentacao/recomendacao.md`.
+- **PostgreSQL (RF06)**: o script `sql/criar_tabelas.sql` é a fonte da verdade do schema (o pipeline o executa). A recarga usa upsert (`ON CONFLICT`), sem truncar. Só entram registros tratados que passam nas regras de integridade. Comentários ficam para o MongoDB (RF07); `recomendacao` é preenchida pelo RF11.
 - **MongoDB (RF07)**: só comentários/avaliações (tags em array e texto livre). A recarga usa upsert na tripla `(usuario_id, conteudo_id, data)`. A `categoria` é copiada do catálogo na carga para o `$group` do RF07. Detalhes em `documentacao/escolha_mongodb.md`.
 
 ## O que falta terminar
 
-- Recomendação (RF10/RF11).
 - KPIs e dashboard no Superset.
 
 ## Limitações

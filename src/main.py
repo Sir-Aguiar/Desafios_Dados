@@ -14,6 +14,7 @@ from src.persistencia import PersistenciaPostgres
 from src.persistencia_mongo import PersistenciaMongo
 from src.embeddings import GeradorEmbeddings
 from src.busca_semantica import BuscadorSemantico
+from src.recomendacao import GeradorRecomendacoes
 
 
 def main():
@@ -78,6 +79,17 @@ def main():
             + str(len(resultado_busca["consultas"]))
         )
 
+        # ---------- FASE 2: Recomendacao (RF10/RF11) ----------
+        logger.info("[FASE 2] Geracao e persistencia de recomendacoes (RF10/RF11)")
+        gerador_rec = GeradorRecomendacoes()
+        resultado_rec = gerador_rec.gerar()
+        logger.info(
+            "Recomendacoes geradas: "
+            + str(resultado_rec["resumo"]["total"])
+            + ", persistidas: "
+            + str(resultado_rec["resumo"].get("persistidas", 0))
+        )
+
         # ---------- FASE 2: Resumo (RF05) ----------
         logger.info("[FASE 2] Consolidando resumo da ingestao (RF05)")
         duracao = round(time.time() - inicio, 2)
@@ -92,7 +104,6 @@ def main():
 
         # ---------- STUBS ----------
         logger.info("-" * 60)
-        logger.info("[STUB] Recomendacao (RF10) .......... nao implementado")
         logger.info("[STUB] KPIs (RF12) .................. nao implementado")
         logger.info("-" * 60)
 

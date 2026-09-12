@@ -129,7 +129,7 @@ CREATE INDEX IF NOT EXISTS ix_interacao_data_hora ON interacao (data_hora);
 
 -- -------------------------------------------------------
 -- 5. recomendacao
--- Preenchida pelo RF10/RF11 (não vem dos arquivos brutos)
+-- Preenchida pelo RF11 a partir da geracao do RF10 (não vem dos arquivos brutos)
 -- -------------------------------------------------------
 CREATE TABLE IF NOT EXISTS recomendacao (
     recomendacao_id  SERIAL PRIMARY KEY,
