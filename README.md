@@ -137,15 +137,13 @@ pip install -r requirements.txt
 
 # 3. criar .env na raiz (POSTGRES_* e MONGO_*)
 
-# 4. subir serviços (PostgreSQL com pgvector, MongoDB e Apache Superset)
+# 4. subir serviços (PostgreSQL com pgvector, MongoDB, Apache Superset e Apresentação)
 docker compose up -d
+
+> **Automação do Apache Superset:** O container `desafio_superset` inicializa o banco de metadados, cria o usuário administrador (`admin`/`admin`), sincroniza permissões com perfil público e provisiona os datasets e o dashboard automaticamente via `docker-compose.yml`.
 
 # 5. rodar pipeline completo (ingestão, validação, bancos, embeddings, recomendações e KPIs)
 python -m src.main
-
-# 6. inicializar e provisionar o Apache Superset (opcional, caso não rode automaticamente)
-python -m src.superset_init
-python -m src.superset_dashboard
 ```
 
 O schema PostgreSQL é criado automaticamente na carga (`sql/criar_tabelas.sql`), juntamente com as visões analíticas de métricas e KPIs (`sql/criar_views_kpi.sql`). Consultas manuais de verificação: `sql/consultas.sql`. A coleção MongoDB (índices e validador) é aplicada na carga; consultas manuais: `mongodb/consultas.js`.
@@ -169,6 +167,21 @@ python -m src.kpis
 - **Senha**: `admin`
 - O dashboard consolidado está acessível em **Dashboards** -> `Plataforma Educacional — KPIs e Recomendações`.
 - Arquivo exportado do dashboard disponível em `dashboard/dashboard_plataforma_educacional.zip`.
+
+### Apresentação Executiva de Slides (Docker / Web)
+
+A solução inclui uma apresentação interativa moderna com 9 slides executivos, estruturada especificamente para a banca avaliadora com ênfase na análise de dados, KPIs (RF12) e Dashboard no Apache Superset (RF13):
+
+- **URL da Apresentação Web**: [http://localhost:8085](http://localhost:8085) (ou [http://localhost:8085/slides.html](http://localhost:8085/slides.html))
+- **Recursos da Apresentação**:
+  - **Slide 4 com Superset em Kiosk Mode (`standalone=2`)**: O painel executivo do Apache Superset é renderizado diretamente dentro do slide de forma interativa (com filtros por categoria e nível funcionais), além de um alternador instantâneo para a versão de backup de alta fidelidade;
+  - **Slides Analíticos de Aprofundamento (Slides 5 a 8)**: Gráficos de alta legibilidade em tema escuro com anotações analíticas e botões diretos `⚡ Abrir Slice no Superset (Kiosk)` para exploração granular;
+  - **Acesso Rápido ao Superset**: Atalhos diretos para abrir o Apache Superset em nova aba na porta `8088` (`/superset/dashboard/1/` e `/sqllab/`);
+  - **Cronômetro Integrado**: Temporizador com meta de 10 minutos e alerta visual para controle de tempo do pitch;
+  - **Notas do Apresentador (`N`)**: Roteiro de fala detalhado com números e insights para cada slide;
+  - **Cheat Sheet de Defesa Técnica (`C`)**: Guia com respostas prontas e justificativas arquiteturais para as perguntas da banca;
+  - **Navegação**: Setas do teclado `←` / `→`, barra de espaço, e tecla `F` (tela cheia).
+- **Arquivo PowerPoint Offline**: Apresentação completa e diagramada em formato `.pptx` disponível na raiz do repositório: `apresentacao_plataforma_educacional.pptx`.
 
 Se a senha do Postgres no `.env` mudar depois do primeiro `docker compose up`, é preciso recriar o volume (`docker compose down` + apagar `desafios_dados_postgres_data` + `up` de novo).
 

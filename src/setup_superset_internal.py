@@ -156,6 +156,7 @@ with app.app_context():
         params={
             "viz_type": "dist_bar",
             "groupby": ["categoria_nome"],
+            "columns": [],
             "metrics": [
                 {"expressionType": "SQL", "sqlExpression": "SUM(total_interacoes)", "label": "Total Interações"},
                 {"expressionType": "SQL", "sqlExpression": "SUM(conclusoes)", "label": "Total Conclusões"}
@@ -193,6 +194,7 @@ with app.app_context():
         params={
             "viz_type": "dist_bar",
             "groupby": ["categoria_nome"],
+            "columns": [],
             "metrics": [
                 {"expressionType": "SQL", "sqlExpression": "SUM(qtd_recomendacoes)", "label": "Qtd Recomendações"}
             ],
@@ -214,6 +216,7 @@ with app.app_context():
         params={
             "viz_type": "dist_bar",
             "groupby": ["formato_conteudo"],
+            "columns": [],
             "metrics": [
                 {"expressionType": "SQL", "sqlExpression": "SUM(total_interacoes)", "label": "Interações"},
                 {"expressionType": "SQL", "sqlExpression": "SUM(conclusoes)", "label": "Conclusões"}

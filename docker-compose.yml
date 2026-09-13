@@ -30,12 +30,32 @@ services:
       - "8088:8088"
     environment:
       SUPERSET_SECRET_KEY: "desafio_dados_fic_dev_secret_key_2026_super_safe"
+      SUPERSET_CONFIG_PATH: "/app/pythonpath/superset_config.py"
       TALISMAN_ENABLED: "False"
       SUPERSET_LOAD_EXAMPLES: "no"
     volumes:
       - superset_home:/app/superset_home
+      - ./dashboard/superset_config.py:/app/pythonpath/superset_config.py:ro
+      - ./src/setup_superset_internal.py:/app/setup_superset_internal.py:ro
+    command: >
+      /bin/sh -c "
+      superset db upgrade &&
+      superset fab create-admin --username admin --firstname Admin --lastname FICDEV --email admin@ficdev.local --password admin || true &&
+      superset init &&
+      python /app/setup_superset_internal.py || true &&
+      /usr/bin/run-server.sh
+      "
     depends_on:
       - postgres
+    restart: unless-stopped
+
+  apresentacao:
+    image: nginx:alpine
+    container_name: desafio_apresentacao
+    ports:
+      - "8085:80"
+    volumes:
+      - .:/usr/share/nginx/html:ro
     restart: unless-stopped
 
 volumes:
