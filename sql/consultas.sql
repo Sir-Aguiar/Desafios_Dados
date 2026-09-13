@@ -194,3 +194,81 @@ JOIN interacao i
  AND (i.tipo_interacao = 'conclusão' OR i.percentual_conclusao >= 100)
 WHERE r.gerado_em = (SELECT MAX(gerado_em) FROM recomendacao)
 ORDER BY r.usuario_id, r.posicao;
+
+-- =====================================================================
+-- RF12 — Consultas de verificacao das views de Métricas e KPIs
+-- =====================================================================
+
+-- 1. Metricas gerais (Cartoes / Big Numbers)
+SELECT * FROM vw_kpi_metricas_gerais;
+
+-- 2. Desempenho por categoria e tipo (Grafico de Barras)
+SELECT
+    categoria_nome,
+    tipo_conteudo,
+    qtd_conteudos,
+    total_interacoes,
+    taxa_conclusao_pct,
+    avaliacao_media
+FROM vw_kpi_desempenho_categoria
+ORDER BY total_interacoes DESC;
+
+-- 3. Evolucao temporal (Grafico de Linhas)
+SELECT
+    data,
+    total_interacoes,
+    visualizacoes,
+    conclusoes,
+    avaliacao_media_dia
+FROM vw_kpi_evolucao_temporal
+ORDER BY data;
+
+-- 4. Top 5 conteudos com maior taxa de conclusao
+SELECT
+    conteudo_id,
+    titulo,
+    categoria_nome,
+    tipo,
+    nivel,
+    taxa_conclusao_pct,
+    avaliacao_media
+FROM vw_kpi_analise_conteudos
+WHERE total_interacoes >= 5
+ORDER BY taxa_conclusao_pct DESC, avaliacao_media DESC
+LIMIT 5;
+
+-- 5. Resumo das recomendacoes por categoria
+SELECT
+    categoria_nome,
+    classificacao,
+    qtd_recomendacoes,
+    pontuacao_media
+FROM vw_kpi_recomendacoes_resumo
+ORDER BY categoria_nome, classificacao;
+
+-- 6. Comparativo de Retencao e Engajamento por Formato Didatico (Pergunta de Negocio 1)
+SELECT
+    formato_conteudo,
+    total_conteudos_catalogo,
+    total_interacoes,
+    taxa_conclusao_pct,
+    avaliacao_media,
+    tempo_medio_consumido_min,
+    carga_horaria_media_estimada_min
+FROM vw_kpi_engajamento_formato
+ORDER BY taxa_conclusao_pct DESC;
+
+-- 7. Taxa de Conversao do Motor de Recomendacao Vetorial (Pergunta de Negocio 2)
+SELECT
+    total_recomendacoes_geradas,
+    total_recomendacoes_consumidas,
+    taxa_conversao_global_pct,
+    total_positivas,
+    positivas_consumidas,
+    taxa_conversao_positivos_pct,
+    total_estaveis,
+    estaveis_consumidas,
+    taxa_conversao_estaveis_pct
+FROM vw_kpi_conversao_recomendacoes;
+
+
