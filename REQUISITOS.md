@@ -22,9 +22,9 @@ Legenda:
 | RF09 | Busca por similaridade semântica | Concluído |
 | RF10 | Geração de recomendações | Concluído |
 | RF11 | Persistência das recomendações | Concluído |
-| RF12 | Produção de métricas e KPIs | Não iniciado |
-| RF13 | Dashboard no Apache Superset | Não iniciado |
-| RF14 | Registro de execução | Parcial |
+| RF12 | Produção de métricas e KPIs | Concluído |
+| RF13 | Dashboard no Apache Superset | Concluído |
+| RF14 | Registro de execução | Concluído |
 
 ---
 
@@ -311,36 +311,36 @@ Cada recomendação deverá possuir, no mínimo:
 
 O sistema deverá calcular, no mínimo:
 
-- [ ] duas métricas operacionais
-- [ ] dois KPIs orientados à tomada de decisão
+- [x] duas métricas operacionais
+- [x] dois KPIs orientados à tomada de decisão
 
 Entre os indicadores possíveis estão:
 
-- quantidade de usuários
-- quantidade de conteúdos
-- visualizações por período
-- avaliação média
-- taxa de conclusão
-- engajamento
-- retenção
-- conversão de recomendações
-- tempo médio consumido
-- quantidade de recomendações geradas
+- [x] quantidade de usuários
+- [x] quantidade de conteúdos
+- [x] visualizações por período
+- [x] avaliação média
+- [x] taxa de conclusão
+- [x] engajamento
+- [x] retenção
+- [x] conversão de recomendações
+- [x] tempo médio consumido
+- [x] quantidade de recomendações geradas
 
 Para cada KPI, a equipe deverá informar:
 
-- [ ] nome
-- [ ] objetivo
-- [ ] fórmula
-- [ ] fonte dos dados
-- [ ] periodicidade
-- [ ] interpretação
+- [x] nome
+- [x] objetivo
+- [x] fórmula
+- [x] fonte dos dados
+- [x] periodicidade
+- [x] interpretação
 
 Os resultados deverão ser disponibilizados em tabelas ou visões no PostgreSQL para utilização pelo Apache Superset.
 
-- [ ] disponibilizar resultados em tabelas ou visões no PostgreSQL
+- [x] disponibilizar resultados em tabelas ou visões no PostgreSQL
 
-**Status atual:** não iniciado. Não há `documentacao/kpis.md` nem views SQL.
+**Status atual:** atendido. Foram criadas cinco visões analíticas no PostgreSQL (`sql/criar_views_kpi.sql`), incluindo `vw_kpi_metricas_gerais`, `vw_kpi_desempenho_categoria`, `vw_kpi_evolucao_temporal`, `vw_kpi_analise_conteudos` e `vw_kpi_recomendacoes_resumo`. O módulo `src/kpis.py` aplica as views e exporta o consolidado para `dados/processados/kpis_resumo.json`. A documentação completa de cada indicador, fórmula e periodicidade está registrada em `documentacao/kpis.md`.
 
 ---
 
@@ -350,21 +350,21 @@ A equipe deverá construir um dashboard no Apache Superset utilizando os dados c
 
 O dashboard deverá conter, no mínimo:
 
-- [ ] três cartões de indicadores
-- [ ] um gráfico de barras
-- [ ] um gráfico de linhas
-- [ ] dois filtros interativos
+- [x] três cartões de indicadores
+- [x] um gráfico de barras
+- [x] um gráfico de linhas
+- [x] dois filtros interativos
 
 O dashboard deverá permitir responder a pelo menos duas perguntas de negócio definidas pela equipe.
 
-- [ ] definir pelo menos duas perguntas de negócio
-- [ ] permitir responder às perguntas de negócio pelo dashboard
+- [x] definir pelo menos duas perguntas de negócio
+- [x] permitir responder às perguntas de negócio pelo dashboard
 
 A escolha de cada gráfico deverá ser justificada considerando a natureza dos dados e a informação que se deseja comunicar.
 
-- [ ] justificar a escolha de cada gráfico
+- [x] justificar a escolha de cada gráfico
 
-**Status atual:** não iniciado. Não há dashboard, prints nem evidências em `dashboard/`.
+**Status atual:** atendido. O Apache Superset foi orquestrado no `docker-compose.yml` (porta 8088), com provisionamento automatizado via `src/superset_init.py` e `src/superset_dashboard.py`. O painel conta com três cartões Big Number (Total de Usuários, Avaliação Média CSAT e Taxa de Conclusão Global), gráfico de barras por categoria, gráfico de linhas temporal e dois filtros interativos (Categoria e Nível). O arquivo exportado do dashboard foi gravado em `dashboard/dashboard_plataforma_educacional.zip` e a documentação completa está em `documentacao/kpis.md` e `dashboard/README.md`.
 
 ---
 
@@ -379,10 +379,11 @@ Durante a execução, o sistema deverá registrar:
 - [x] falhas de conexão
 - [x] falhas na geração de embeddings
 - [x] falhas de persistência
-- [ ] tempo de execução das principais etapas
+- [x] tempo de execução das principais etapas
 
 O registro deverá permitir identificar a origem e a causa provável de cada problema.
 
-- [x] identificar origem e causa provável nos logs já existentes (leitura, validação e persistência)
+- [x] identificar origem e causa provável nos logs já existentes (leitura, validação, persistência e conexões)
 
-**Status atual:** parcialmente atendido. Há logging em arquivo (`logs/pipeline.log`) e no console, com início/fim, arquivos lidos, contagens e motivos de rejeição. Falhas de conexão e de persistência no PostgreSQL (`src/persistencia.py`) e no MongoDB (`src/persistencia_mongo.py`) são registradas. Falhas na geração de embeddings (conexão, DDL, carga do modelo e `encode`) são registradas em `src/embeddings.py`. Ainda falta o tempo por etapa (hoje só o tempo total do pipeline).
+**Status atual:** atendido. Logging abrangente em console e arquivo (`logs/pipeline.log`), com cronometragem individual de cada etapa (ingestão, validação, tratamento, persistência Postgres, persistência Mongo, embeddings, busca semântica, recomendações e KPIs). Os tempos por etapa e tempo total são persistidos no JSON `dados/processados/resumo_ingestao.json`. Falhas de conexão e banco contam com diagnóstico de causa provável.
+

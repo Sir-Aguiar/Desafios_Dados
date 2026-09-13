@@ -1,4 +1,4 @@
-﻿"""
+"""
 Modulo de ingestao dos dados brutos - RF02.
 Le CSV e JSON, reporta quantos registros cada fonte possui.
 """
@@ -97,7 +97,7 @@ class Ingestor:
     # ------------------------------------------------------------------
     # RF05 - Consolidar e persistir o resumo
     # ------------------------------------------------------------------
-    def consolidar_resumo(self, relatorios_validacao, corrigidos, carregados_pg, carregados_mongo, tempo):
+    def consolidar_resumo(self, relatorios_validacao, corrigidos, carregados_pg, carregados_mongo, tempo, tempos_etapas=None):
         """Junta as metricas de ingestao + validacao + tratamento em um JSON."""
         for fonte in ("catalogo", "interacoes", "comentarios"):
             self.resumo[fonte]["validos"] = relatorios_validacao[fonte]["validos"]
@@ -116,6 +116,8 @@ class Ingestor:
         self.resumo["carregados_postgres"] = carregados_pg
         self.resumo["carregados_mongo"] = carregados_mongo
         self.resumo["tempo_total_segundos"] = tempo
+        if tempos_etapas:
+            self.resumo["tempos_etapas"] = tempos_etapas
 
         # Gravar em JSON
         destino = Path("dados/processados/resumo_ingestao.json")

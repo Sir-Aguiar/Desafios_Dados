@@ -137,14 +137,20 @@ pip install -r requirements.txt
 
 # 3. criar .env na raiz (POSTGRES_* e MONGO_*)
 
-# 4. subir bancos (o Postgres lê as credenciais do .env)
+# 4. subir serviços (PostgreSQL com pgvector, MongoDB e Apache Superset)
 docker compose up -d
 
-# 5. rodar
+# 5. rodar pipeline completo (ingestão, validação, bancos, embeddings, recomendações e KPIs)
 python -m src.main
+
+# 6. inicializar e provisionar o Apache Superset (opcional, caso não rode automaticamente)
+python -m src.superset_init
+python -m src.superset_dashboard
 ```
 
-O schema PostgreSQL é criado automaticamente na carga (`sql/criar_tabelas.sql`). Consultas manuais: `sql/consultas.sql`. A coleção MongoDB (índices e validador) é aplicada na carga; consultas manuais: `mongodb/consultas.js`. Depois dos embeddings, o pipeline demonstra a busca semântica (RF09) e gera e persiste as recomendações (RF10/RF11). Para repetir só essas etapas:
+O schema PostgreSQL é criado automaticamente na carga (`sql/criar_tabelas.sql`), juntamente com as visões analíticas de métricas e KPIs (`sql/criar_views_kpi.sql`). Consultas manuais de verificação: `sql/consultas.sql`. A coleção MongoDB (índices e validador) é aplicada na carga; consultas manuais: `mongodb/consultas.js`.
+
+Depois dos embeddings, o pipeline demonstra a busca semântica (RF09), gera e persiste as recomendações (RF10/RF11) e consolida os KPIs (RF12). Para repetir só essas etapas:
 
 ```bash
 python -m src.busca_semantica
@@ -152,14 +158,24 @@ python -m src.busca_semantica "Quero aprender os fundamentos de banco de dados p
 
 python -m src.recomendacao
 python -m src.recomendacao 1
+
+python -m src.kpis
 ```
+
+### Acesso ao Apache Superset (RF13)
+
+- **URL**: [http://localhost:8088](http://localhost:8088)
+- **Usuário**: `admin`
+- **Senha**: `admin`
+- O dashboard consolidado está acessível em **Dashboards** -> `Plataforma Educacional — KPIs e Recomendações`.
+- Arquivo exportado do dashboard disponível em `dashboard/dashboard_plataforma_educacional.zip`.
 
 Se a senha do Postgres no `.env` mudar depois do primeiro `docker compose up`, é preciso recriar o volume (`docker compose down` + apagar `desafios_dados_postgres_data` + `up` de novo).
 
 ## Decisões que tomamos
 
 - o enunciado pede que o sistema rode com `python -m src.main`, então organizamos os módulos como pacote único.
-  As pastas `ingestao/` e `recomendacao/` sugeridas no PDF viram módulos (`src/ingestao.py`, `src/recomendacao.py`).
+  As pastas `ingestao/` e `recomendacao/` sugeridas no PDF viram módulos (`src/ingestao.py`, `src/recomendacao.py`, `src/kpis.py`).
 - **`config.yaml` + `.env`**: parâmetros versionáveis ficam no YAML, senhas ficam no `.env` (fora do Git).
 - **Encoding UTF-8 explícito**: os dados têm acentuação em português (ex.: "Inteligência Artificial") e sem isso o Pandas quebra no Windows.
 - **Validação antes de tratamento**: preferimos separar as etapas para deixar claro o que é regra de negócio (validação) e o que é padronização
@@ -168,12 +184,14 @@ Se a senha do Postgres no `.env` mudar depois do primeiro `docker compose up`, �
 - **Modelo de embeddings (RF08)**: `all-MiniLM-L6-v2` do sentence-transformers. Escolhemos por ser leve (~90 MB), multilíngue o suficiente para o português e rápido em CPU. O texto embeddado é título + descrição; o vetor fica em `embedding_conteudo` associado ao `conteudo_id`. Recargas não geram de novo o mesmo par modelo/texto. Detalhes em `documentacao/modelo_embeddings.md`. **Se quiser usar um modelo maior, basta configurar o EMBEDDING_MODEL e EMBEDDING_DIMENSIONS no .env.**
 - **Busca semântica (RF09)**: a frase em português é embeddada com o mesmo modelo e comparada aos vetores no pgvector (distância de cosseno). O `top_k` e as três consultas de demonstração ficam em `config.yaml`. Resultados no log e em `dados/processados/busca_semantica.json`. Detalhes em `documentacao/busca_semantica.md`.
 - **Recomendação (RF10/RF11)**: pontuação `((Ivis + Icur) / 2) * 100 * Iconc`. Ivis e Icur vêm da similaridade de cosseno no pgvector (centroide do histórico de visualização e de curtidas/notas >= 4). Iconc remove concluídos. Positivo (>= 70) e Estável (entre 40 e 70) entram no ranking; Negativo é descartado. `top_n_por_usuario` está no YAML. O JSON vai para `dados/processados/recomendacoes.json`; o lote é gravado na tabela `recomendacao` (transação + upsert). Recargas inserem um novo `gerado_em`. Detalhes em `documentacao/recomendacao.md`.
-- **PostgreSQL (RF06)**: o script `sql/criar_tabelas.sql` é a fonte da verdade do schema (o pipeline o executa). A recarga usa upsert (`ON CONFLICT`), sem truncar. Só entram registros tratados que passam nas regras de integridade. Comentários ficam para o MongoDB (RF07); `recomendacao` é preenchida pelo RF11.
+- **PostgreSQL (RF06/RF12)**: o script `sql/criar_tabelas.sql` é a fonte da verdade do schema e `sql/criar_views_kpi.sql` cria as visões analíticas. A recarga usa upsert (`ON CONFLICT`), sem truncar. Só entram registros tratados que passam nas regras de integridade. Comentários ficam para o MongoDB (RF07); `recomendacao` é preenchida pelo RF11.
 - **MongoDB (RF07)**: só comentários/avaliações (tags em array e texto livre). A recarga usa upsert na tripla `(usuario_id, conteudo_id, data)`. A `categoria` é copiada do catálogo na carga para o `$group` do RF07. Detalhes em `documentacao/escolha_mongodb.md`.
+- **Apache Superset (RF13)**: orquestrado via container próprio com SQLite interno de metadados e conexão ao banco PostgreSQL do projeto. Provisionamento automático de views, datasets e dashboards via API/script Python.
+- **Registro de Execução (RF14)**: log com cronometragem granular de cada etapa do pipeline gravado no resumo JSON e no arquivo de log.
 
-## O que falta terminar
+## Status da Solução
 
-- KPIs e dashboard no Superset.
+Todos os requisitos obrigatórios do edital (**RF01 a RF14**) foram integralmente implementados, testados e documentados.
 
 ## Limitações
 

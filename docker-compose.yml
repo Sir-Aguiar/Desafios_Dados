@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -25,6 +23,22 @@ services:
       - mongo_data:/data/db
     restart: unless-stopped
 
+  superset:
+    image: apache/superset:3.1.1
+    container_name: desafio_superset
+    ports:
+      - "8088:8088"
+    environment:
+      SUPERSET_SECRET_KEY: "desafio_dados_fic_dev_secret_key_2026_super_safe"
+      TALISMAN_ENABLED: "False"
+      SUPERSET_LOAD_EXAMPLES: "no"
+    volumes:
+      - superset_home:/app/superset_home
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   mongo_data:
+  superset_home:
