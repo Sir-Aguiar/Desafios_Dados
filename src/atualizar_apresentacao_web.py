@@ -1,0 +1,1173 @@
+import os
+
+HTML_CONTENT = """<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pitch Executivo — Pipeline de Recomendação e Dashboard Educacional</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 50% 0%, #171b30 0%, #0b0d17 100%);
+      --card-bg: rgba(26, 32, 53, 0.7);
+      --card-border: rgba(99, 102, 241, 0.2);
+      --accent-blue: #38bdf8;
+      --accent-indigo: #6366f1;
+      --accent-purple: #a855f7;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --accent-amber: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Top Bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      z-index: 20;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .badge-fic {
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple));
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
+
+    .project-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .timer-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 600;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.35rem 0.85rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .timer-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-emerald);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+      padding: 0.42rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-indigo), #4f46e5);
+      border-color: #6366f1;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+    }
+
+    .btn-superset {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      border-color: #38bdf8;
+      color: #fff;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+      animation: supersetPulse 2.5s infinite;
+    }
+
+    .btn-superset:hover {
+      background: linear-gradient(135deg, #0369a1, #075985);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.65);
+      transform: translateY(-1px);
+    }
+
+    @keyframes supersetPulse {
+      0% { box-shadow: 0 0 8px rgba(56, 189, 248, 0.25); }
+      50% { box-shadow: 0 0 18px rgba(56, 189, 248, 0.55); }
+      100% { box-shadow: 0 0 8px rgba(56, 189, 248, 0.25); }
+    }
+
+    /* Presentation Area */
+    main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 2rem;
+    }
+
+    .slide {
+      position: absolute;
+      width: 92%;
+      max-width: 1240px;
+      height: 85vh;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 1.5rem 2.2rem;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      opacity: 0;
+      transform: scale(0.96) translateX(40px);
+      pointer-events: none;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: scale(1) translateX(0);
+      pointer-events: auto;
+    }
+
+    .slide-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent-blue);
+      margin-bottom: 0.25rem;
+    }
+
+    .slide-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 0.85rem;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 0.75rem;
+    }
+
+    /* Grids */
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.85rem; }
+    .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
+
+    /* Cards */
+    .stat-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 0.75rem 0.95rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .stat-card.blue { border-color: rgba(56, 189, 248, 0.3); }
+    .stat-card.indigo { border-color: rgba(99, 102, 241, 0.3); }
+    .stat-card.emerald { border-color: rgba(16, 185, 129, 0.3); }
+    .stat-card.rose { border-color: rgba(244, 63, 94, 0.3); }
+    .stat-card.amber { border-color: rgba(245, 158, 11, 0.3); }
+
+    .stat-lbl {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.2rem;
+    }
+
+    .stat-val {
+      font-size: 1.65rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 0.2rem;
+    }
+
+    .stat-sub {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      line-height: 1.25;
+    }
+
+    .slide-img {
+      max-height: 36vh;
+      max-width: 100%;
+      width: auto;
+      object-fit: contain;
+      margin: 0 auto;
+      display: block;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: #0f172a;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .bullet-box {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 1.1rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .bullet-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      color: #cbd5e1;
+    }
+
+    .bullet-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent-indigo);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    /* Tables */
+    .table-container {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.85rem 1.1rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent-blue);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    td {
+      padding: 0.85rem 1.1rem;
+      font-size: 0.88rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #cbd5e1;
+    }
+
+    .highlight-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+    }
+
+    .pill-green { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .pill-blue { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+    .pill-amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+    .callout-box {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.1));
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 14px;
+      padding: 1.1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .callout-val {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+
+    /* Superset Interactive Banner */
+    .superset-banner {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 14px;
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Bottom Nav Bar */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 2.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      z-index: 20;
+    }
+
+    .progress-bar-container {
+      flex: 1;
+      max-width: 400px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      overflow: hidden;
+      margin: 0 2rem;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-indigo));
+      width: 11.1%;
+      transition: width 0.3s ease;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* Speaker Notes Drawer */
+    .drawer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(11, 13, 23, 0.96);
+      border-top: 2px solid var(--accent-indigo);
+      backdrop-filter: blur(25px);
+      padding: 1.75rem 3rem;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 50;
+      max-height: 42vh;
+      overflow-y: auto;
+      box-shadow: 0 -20px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .drawer.open {
+      transform: translateY(0);
+    }
+
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .drawer-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .drawer-text {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      color: #e2e8f0;
+      font-style: italic;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 1.5rem;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 920px;
+      max-height: 86vh;
+      overflow-y: auto;
+      padding: 2.2rem;
+      position: relative;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .close-modal:hover {
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header>
+    <div class="logo-area">
+      <span class="badge-fic">FIC_DEV</span>
+      <span class="project-title">Fundamentos de Dados para IA — Pitch Executivo</span>
+    </div>
+    <div class="header-controls">
+      <a href="http://localhost:8088/superset/dashboard/1/" target="_blank" class="btn btn-superset" id="btnSupersetHeader" title="Abrir Dashboard no Apache Superset (Porta 8088)">
+        🚀 Superset (Porta 8088)
+      </a>
+      <div class="timer-pill">
+        <div class="timer-dot"></div>
+        <span id="timerDisplay">00:00</span>
+        <span style="color:#64748b; font-size: 0.8rem;">/ 10:00</span>
+      </div>
+      <button class="btn" onclick="toggleTimer()">⏱️ Pausar/Play</button>
+      <button class="btn" onclick="openModal('cheatModal')">📋 Cheat Sheet</button>
+      <button class="btn btn-primary" onclick="toggleNotes()">🎙️ Notas (N)</button>
+    </div>
+  </header>
+
+  <!-- Presentation Main Area -->
+  <main>
+
+    <!-- Slide 1 -->
+    <div class="slide active" id="slide-1" data-notes="Bom dia a todos os membros da banca. Hoje apresentamos a solução da nossa equipe para a plataforma de conteúdos educacionais. Nosso desafio principal não foi apenas construir um pipeline que funcionasse tecnicamente, mas responder a uma dor crítica de qualquer edtech: como transformar dados brutos de navegação em decisões pedagógicas concretas para combater a evasão de alunos. Nossa arquitetura conecta fontes multimodais em CSV e JSON, passa por um armazenamento híbrido no PostgreSQL e MongoDB, utiliza representações vetoriais com pgvector para inteligência semântica e entrega os resultados mastigados em um dashboard analítico no Apache Superset. Vamos ver como esses dados se comportaram na prática.">
+      <span class="slide-tag">Slide 1 de 9 • Visão Geral (~35s)</span>
+      <h1 class="slide-title">Pipeline de Recomendação e Dashboard Educacional</h1>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="stat-card blue">
+            <div class="stat-lbl">Desafio do Negócio</div>
+            <div class="stat-val" style="font-size: 1.7rem;">Evasão Discente</div>
+            <div class="stat-sub">Plataforma multiformato com alto volume de consumo, mas baixa visibilidade de conclusão.</div>
+          </div>
+          <div class="stat-card indigo">
+            <div class="stat-lbl">Arquitetura Integrada</div>
+            <div class="stat-val" style="font-size: 1.7rem;">Híbrida & Vetorial</div>
+            <div class="stat-sub">PostgreSQL (relacional + pgvector) e MongoDB (NoSQL) orquestrados em Docker.</div>
+          </div>
+          <div class="stat-card emerald">
+            <div class="stat-lbl">Entrega Executiva</div>
+            <div class="stat-val" style="font-size: 1.7rem;">Apache Superset</div>
+            <div class="stat-sub">10 visões analíticas em tempo real transformando 3.000 registros em planos de retenção.</div>
+          </div>
+        </div>
+        <div class="bullet-box">
+          <div class="bullet-item">
+            <div class="bullet-icon">1</div>
+            <div><strong>Problema:</strong> Cursos com alta avaliação média, porém com abandono precoce de alunos em módulos teóricos.</div>
+          </div>
+          <div class="bullet-item">
+            <div class="bullet-icon">2</div>
+            <div><strong>Solução Ponta a Ponta:</strong> Da ingestão resiliente ao motor de recomendação vetorial personalizado.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2 -->
+    <div class="slide" id="slide-2" data-notes="Começando pela base de tudo: a confiabilidade da ingestão. Processamos três mil registros no total, mil de cada fonte, e aplicamos regras rigorosas de saneamento antes de qualquer gravação. O catálogo de conteúdos chegou perfeito: mil itens lidos, zero correções necessárias. Já nas interações dos estudantes, 35,6% dos registros precisaram de tratamento de valores nulos e normalização de percentuais. Nos comentários em MongoDB, 83,7% passaram por higienização de strings e validação de notas. O grande diferencial de engenharia da nossa equipe foi garantir 100% de conformidade operacional final com zero descarte de linhas. Nenhum dado foi varrido para debaixo do tapete: tudo foi validado, corrigido e integrado com rastreabilidade.">
+      <span class="slide-tag">Slide 2 de 9 • Qualidade na Ingestão (~55s)</span>
+      <h1 class="slide-title">Governança e Qualidade dos Dados de Entrada</h1>
+      <div class="slide-body">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Fonte de Dados</th>
+                <th>Registros Lidos</th>
+                <th>Válidos</th>
+                <th>Corrigidos</th>
+                <th>Taxa de Correção</th>
+                <th>Conformidade Final</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Catálogo de Conteúdos</strong></td>
+                <td>1.000</td>
+                <td>1.000</td>
+                <td>0</td>
+                <td><span class="highlight-pill pill-blue">0,0% (Íntegro)</span></td>
+                <td><span class="highlight-pill pill-green">100,0%</span></td>
+              </tr>
+              <tr>
+                <td><strong>Interações dos Alunos</strong></td>
+                <td>1.000</td>
+                <td>1.000</td>
+                <td>356</td>
+                <td><span class="highlight-pill pill-green">35,6% (Saneado)</span></td>
+                <td><span class="highlight-pill pill-green">100,0%</span></td>
+              </tr>
+              <tr>
+                <td><strong>Comentários (MongoDB)</strong></td>
+                <td>1.000</td>
+                <td>1.000</td>
+                <td>837</td>
+                <td><span class="highlight-pill pill-green">83,7% (Sanitizado)</span></td>
+                <td><span class="highlight-pill pill-green">100,0%</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout-box">
+          <div class="callout-val" style="color: var(--accent-emerald);">100%</div>
+          <div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: #fff;">Conformidade Final com Zero Descarte de Linhas</div>
+            <div style="color: #94a3b8; font-size: 0.9rem;">Imputação defensiva de nulos, higienização de strings e integridade referencial mantida em 100% dos dados.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3 -->
+    <div class="slide" id="slide-3" data-notes="Para a busca e recomendação, geramos vetores de 384 dimensões utilizando o modelo MiniLM-L6-v2 integrado nativamente ao PostgreSQL via extensão pgvector. Validamos que a busca semântica responde com altíssima precisão quando a intenção do aluno é clara: para uma consulta como 'Python avançado com POO', atingimos similaridade de 0,84 no topo do ranking. Para termos mais amplos, como 'Fundamentos de banco para IA', a similaridade fica em torno de 0,66, refletindo com precisão a dispersão do tema. Nosso motor de recomendação combina histórico de visualização e curtida com uma trava obrigatória: conteúdos já concluídos têm pontuação zerada automaticamente. Avaliamos mais de 38 mil pares possíveis de usuário e conteúdo, e o motor foi cirúrgico: persistiu apenas 744 recomendações — uma taxa de seletividade de 1,96% —, sendo que mais de 78% dessas sugestões são de altíssima afinidade, com pontuação superior a 70 pontos.">
+      <span class="slide-tag">Slide 3 de 9 • IA Vetorial (~60s)</span>
+      <h1 class="slide-title">Inteligência Semântica e Motor de Recomendação</h1>
+      <div class="slide-body">
+        <div class="grid-4">
+          <div class="stat-card blue">
+            <div class="stat-lbl">Busca Semântica Específica</div>
+            <div class="stat-val">0,84</div>
+            <div class="stat-sub">"Python avançado com POO" (Precisão pontual)</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-lbl">Busca Semântica Ampla</div>
+            <div class="stat-val">0,66</div>
+            <div class="stat-sub">"Fundamentos de banco para IA" (Tema difuso)</div>
+          </div>
+          <div class="stat-card emerald">
+            <div class="stat-lbl">Alta Afinidade (Score &ge; 70)</div>
+            <div class="stat-val">78,1%</div>
+            <div class="stat-sub">581 recomendações positivas no lote</div>
+          </div>
+          <div class="stat-card indigo">
+            <div class="stat-lbl">Taxa de Seletividade</div>
+            <div class="stat-val">1,96%</div>
+            <div class="stat-sub">744 selecionados de 38.007 pares</div>
+          </div>
+        </div>
+        <div class="bullet-box">
+          <div class="bullet-item">
+            <div class="bullet-icon">&Sigma;</div>
+            <div><strong>Fórmula do Motor:</strong> <code>Pontuação = ((I_vis + I_cur) / 2) * 100 * I_conc</code> — Conteúdos concluídos são zerados automaticamente.</div>
+          </div>
+        </div>
+        <img src="dashboard/evidencias/grafico_recomendacoes.png" alt="Recomendações por Categoria" class="slide-img" style="max-height: 30vh;">
+      </div>
+    </div>
+
+    <!-- Slide 4 -->
+    <div class="slide" id="slide-4" data-notes="Entrando agora no coração do nosso projeto: o que esses números realmente nos dizem sobre o negócio no nosso Dashboard do Superset? Temos uma base ativa de 150 alunos interagindo com mil conteúdos. À primeira vista, o cenário parece dos sonhos: a avaliação média global é de 4,48 estrelas em 5. Os estudantes que avaliam o catálogo atribuem notas de excelência. Porém, ao cruzar esse dado com a conclusão, encontramos o grande paradoxo da plataforma: a taxa de conclusão global é de apenas 28,62%. Foram 154 conclusões para mais de 530 materiais iniciados ou visualizados, com um tempo médio de consumo de cerca de 145 minutos. A pergunta que fizemos aos dados foi: se o conteúdo é tão bem avaliado, por que menos de um terço dos alunos chega até o fim? Fomos investigar onde está esse atrito.">
+      <span class="slide-tag">Slide 4 de 9 • Dashboard: Big Numbers (~60s)</span>
+      <h1 class="slide-title">Painel Executivo: O Diagnóstico Global (RF12/RF13)</h1>
+      <div class="slide-body">
+        <div class="grid-5">
+          <div class="stat-card blue">
+            <div class="stat-lbl">Usuários Ativos</div>
+            <div class="stat-val">150</div>
+            <div class="stat-sub">Discentes com interações</div>
+          </div>
+          <div class="stat-card emerald">
+            <div class="stat-lbl">Satisfação (CSAT)</div>
+            <div class="stat-val">4,48</div>
+            <div class="stat-sub">Escala 1 a 5 (Aprovação alta)</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-lbl">Taxa Conclusão</div>
+            <div class="stat-val">28,6%</div>
+            <div class="stat-sub">154 concluídos de 538</div>
+          </div>
+          <div class="stat-card indigo">
+            <div class="stat-lbl">Tempo Médio</div>
+            <div class="stat-val" style="font-size: 1.85rem;">144,9m</div>
+            <div class="stat-sub">Dedicados por conteúdo</div>
+          </div>
+          <div class="stat-card emerald">
+            <div class="stat-lbl">Assertividade IA</div>
+            <div class="stat-val">78,1%</div>
+            <div class="stat-sub">Score &ge; 70 pontos</div>
+          </div>
+        </div>
+
+        <!-- SUPERSET CONTROLS & KIOSK MODE TOGGLE -->
+        <div class="superset-banner" style="margin-bottom: 0.35rem; padding: 0.5rem 0.85rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: #38bdf8; box-shadow: 0 0 10px #38bdf8;"></div>
+            <div>
+              <div style="font-weight: 700; color: #fff; font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem;">
+                Apache Superset em Kiosk Mode
+                <span style="font-size: 0.72rem; background: rgba(56, 189, 248, 0.2); color: #38bdf8; padding: 0.1rem 0.45rem; border-radius: 4px;">Porta 8088</span>
+              </div>
+              <div style="color: #94a3b8; font-size: 0.78rem;">Interativo no Docker • Login: <code style="color: #38bdf8; font-weight: bold;">admin</code> / <code style="color: #38bdf8; font-weight: bold;">admin</code> • Dashboard ID: 1</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.45rem;">
+            <button class="btn btn-superset" id="btnModeKiosk" onclick="setSlide4Mode('kiosk')" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">
+              🖥️ Kiosk Superset (Ao Vivo)
+            </button>
+            <button class="btn" id="btnModeBackup" onclick="setSlide4Mode('backup')" style="padding: 0.35rem 0.75rem; font-size: 0.82rem; border-color: rgba(255,255,255,0.2);">
+              📊 Backup Renderizado
+            </button>
+            <a href="http://localhost:8088/superset/dashboard/1/" target="_blank" class="btn" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">
+              ↗ Nova Aba
+            </a>
+            <a href="http://localhost:8088/sqllab/" target="_blank" class="btn" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">
+              💻 SQL Lab
+            </a>
+          </div>
+        </div>
+
+        <!-- CONTAINER KIOSK MODE DO SUPERSET -->
+        <div id="slide4KioskContainer" style="width: 100%; height: 56vh; border-radius: 12px; overflow: hidden; border: 1px solid rgba(56, 189, 248, 0.35); background: #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          <iframe id="supersetKioskIframe" src="http://localhost:8088/superset/dashboard/1/?standalone=2" style="width: 100%; height: 100%; border: none;" title="Apache Superset Kiosk Dashboard"></iframe>
+        </div>
+
+        <!-- BACKUP RENDERIZADO OFFLINE (Inicialmente oculto) -->
+        <div id="slide4BackupContainer" style="display: none; width: 100%; text-align: center;">
+          <img src="dashboard/evidencias/dashboard_geral.png" alt="Dashboard Superset Backup" class="slide-img" style="max-height: 52vh; width: 100%; object-fit: contain;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5 -->
+    <div class="slide" id="slide-5" data-notes="Nossa primeira hipótese foi: será que algumas áreas do conhecimento são rejeitadas pelos alunos? Olhamos para o gráfico de barras por categoria. Vejam o contraste: DevOps & Cloud é o nosso campeão de engajamento prático, atingindo 42,6% de taxa de conclusão com 141 interações. Logo ao lado, Business Intelligence lidera o volume bruto com 144 interações. Por outro lado, encontramos um abismo em Segurança & Governança: a taxa de término cai para alarmantes 13,16%, mesmo sendo a categoria com maior tempo médio gasto por aluno — quase 195 minutos. E aqui está a chave: em Segurança, a nota média é altíssima: 4,68 estrelas! E Engenharia de Dados lidera a satisfação com 4,75. Isso prova tecnicamente que o aluno não abandona por falta de interesse no tema. O problema é a forma como o conteúdo está empacotado.">
+      <span class="slide-tag">Slide 5 de 9 • Descoberta 1 (~90s)</span>
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0.85rem;">
+        <h1 class="slide-title" style="margin-bottom: 0;">Desempenho e Retenção por Trilhas Temáticas</h1>
+        <a href="http://localhost:8088/explore/?slice_id=4&standalone=1" target="_blank" class="btn" style="font-size: 0.8rem; padding: 0.3rem 0.7rem; border-color: rgba(56,189,248,0.4);">⚡ Abrir Slice no Superset (Kiosk)</a>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="stat-card emerald">
+            <div class="stat-lbl">Líder em Conclusão</div>
+            <div class="stat-val" style="color: var(--accent-emerald);">42,6%</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;">DevOps & Cloud</div>
+            <div class="stat-sub">141 interações • 26 conclusões • Alta aderência a exercícios práticos.</div>
+          </div>
+          <div class="stat-card rose">
+            <div class="stat-lbl">Ponto Crítico de Abandono</div>
+            <div class="stat-val" style="color: var(--accent-rose);">13,2%</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;">Segurança & Governança</div>
+            <div class="stat-sub">Maior tempo médio consumido (195 min), mas menor taxa de finalização.</div>
+          </div>
+        </div>
+        <img src="dashboard/evidencias/grafico_categorias.png" alt="Gráfico de Categorias" class="slide-img" style="max-height: 32vh;">
+      </div>
+    </div>
+
+    <!-- Slide 6 -->
+    <div class="slide" id="slide-6" data-notes="Quando cruzamos Categoria com Formato Didático, encontramos a resposta definitiva — este é o insight mais forte de todo o projeto. O conteúdo com maior taxa de término absoluto de todo o dataset é Podcast em Programação & Software, com 61,54% de conclusão. Os alunos escutam os 28 minutos médios de áudio e concluem o aprendizado com nota 4,27. No extremo oposto, o pior gargalo de toda a plataforma é Vídeo em Segurança & Governança, onde a conclusão despenca para meros 6,67%. Olhando a visão geral de formatos, o padrão é irrefutável: Vídeos e Podcasts sustentam taxas médias de 29% a 34% de conclusão, porque exigem cerca de 30 minutos de atenção. Já os Cursos Longos tradicionais têm a pior retenção média da plataforma, com apenas 23,1%, exigindo mais de 560 minutos. A recomendação executiva para a diretoria pedagógica é clara: não criem cursos monolíticos de 10 horas. Quebrem esses temas em trilhas de microlearning com vídeos curtos e podcasts temáticos.">
+      <span class="slide-tag">Slide 6 de 9 • O Maior Insight (~90s)</span>
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0.85rem;">
+        <h1 class="slide-title" style="margin-bottom: 0;">O Formato Didático Define a Retenção</h1>
+        <a href="http://localhost:8088/explore/?slice_id=9&standalone=1" target="_blank" class="btn" style="font-size: 0.8rem; padding: 0.3rem 0.7rem; border-color: rgba(56,189,248,0.4);">⚡ Abrir Slice no Superset (Kiosk)</a>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="callout-box" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4);">
+            <div class="callout-val" style="color: var(--accent-emerald);">61,5%</div>
+            <div>
+              <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Podcast em Programação & Software</div>
+              <div style="color: #94a3b8; font-size: 0.85rem;">Maior retenção do dataset (28,8 min médios • Nota 4,27)</div>
+            </div>
+          </div>
+          <div class="callout-box" style="background: rgba(244, 63, 94, 0.15); border-color: rgba(244, 63, 94, 0.4);">
+            <div class="callout-val" style="color: var(--accent-rose);">6,67%</div>
+            <div>
+              <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Vídeo em Segurança & Governança</div>
+              <div style="color: #94a3b8; font-size: 0.85rem;">Pior retenção do dataset (Evasão crítica em vídeos longos)</div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="stat-card emerald">
+            <div class="stat-lbl">Vídeos Gerais</div>
+            <div class="stat-val">33,9%</div>
+            <div class="stat-sub">29,2 min médios • Rápida absorção</div>
+          </div>
+          <div class="stat-card emerald">
+            <div class="stat-lbl">Podcasts Gerais</div>
+            <div class="stat-val">29,2%</div>
+            <div class="stat-sub">29,9 min médios • Consumo flexível</div>
+          </div>
+        </div>
+        <img src="dashboard/evidencias/grafico_formatos.png" alt="Gráfico de Formatos" class="slide-img" style="max-height: 28vh;">
+      </div>
+    </div>
+
+    <!-- Slide 7 -->
+    <div class="slide" id="slide-7" data-notes="No gráfico temporal de linhas do Superset, mapeamos 234 dias de consumo contínuo durante o ano letivo. Identificamos uma média saudável de 4,3 interações diárias. No entanto, o aprendizado não acontece em fluxo estritamente uniforme: temos picos expressivos que chegam a 7, 10 e até 12 interações em um único dia. Ao correlacionar esses picos com o calendário, percebemos que eles coincidem exatamente com semanas de encerramento de ciclos e lançamentos de materiais novos. O aluno reage fortemente a estímulos de novidade e prazos bem definidos, o que valida o uso de campanhas periódicas de reengajamento.">
+      <span class="slide-tag">Slide 7 de 9 • Sazonalidade (~60s)</span>
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0.85rem;">
+        <h1 class="slide-title" style="margin-bottom: 0;">Evolução Temporal e Comportamento de Consumo</h1>
+        <a href="http://localhost:8088/explore/?slice_id=5&standalone=1" target="_blank" class="btn" style="font-size: 0.8rem; padding: 0.3rem 0.7rem; border-color: rgba(56,189,248,0.4);">⚡ Abrir Slice no Superset (Kiosk)</a>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="stat-card blue">
+            <div class="stat-lbl">Cobertura do Ano Letivo</div>
+            <div class="stat-val">234</div>
+            <div class="stat-sub">Dias contínuos com atividade registrada</div>
+          </div>
+          <div class="stat-card indigo">
+            <div class="stat-lbl">Média Diária Estável</div>
+            <div class="stat-val">4,3</div>
+            <div class="stat-sub">Interações/dia ao longo do período</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-lbl">Picos de Consumo</div>
+            <div class="stat-val">10 a 12</div>
+            <div class="stat-sub">Interações em semanas de novos lançamentos</div>
+          </div>
+        </div>
+        <img src="dashboard/evidencias/grafico_temporal.png" alt="Gráfico Temporal" class="slide-img" style="max-height: 32vh;">
+      </div>
+    </div>
+
+    <!-- Slide 8 -->
+    <div class="slide" id="slide-8" data-notes="O Slide 8 consolida o grande diagnóstico pedagógico do nosso projeto: o paradoxo entre satisfação e conclusão. Temos quatro quadrantes bem definidos. No quadrante de Sucesso Pleno, estão os formatos dinâmicos de DevOps, Programação e Inteligência Artificial, com alta nota e alta conclusão. No quadrante de Oportunidade Crítica, está Segurança & Governança: a nota é 4,68, provando a qualidade do instrutor e a relevância do tema, mas a conclusão de 13% expõe a barreira cognitiva de cursos longos. Ao todo, 74% dos alunos avaliam com nota 5, o que afasta qualquer suspeita de rejeição ao conteúdo. O problema nunca foi a qualidade pedagógica: foi a fadiga de formatos extensos.">
+      <span class="slide-tag">Slide 8 de 9 • Diagnóstico Causa-Raiz (~90s)</span>
+      <h1 class="slide-title">O Paradoxo Pedagógico: Análise Causa-Raiz</h1>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="stat-card indigo" style="border-left: 4px solid var(--accent-indigo);">
+            <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">🌟 Quadrante de Alta Retenção</div>
+            <div style="color: #cbd5e1; font-size: 0.9rem; line-height: 1.5;">
+              <strong>DevOps, Programação & IA:</strong> Formatos práticos, projetos aplicados e podcasts rápidos garantem conclusão de até 61,5% e engajamento contínuo.
+            </div>
+          </div>
+          <div class="stat-card rose" style="border-left: 4px solid var(--accent-rose);">
+            <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">⚠️ O Paradoxo de Segurança</div>
+            <div style="color: #cbd5e1; font-size: 0.9rem; line-height: 1.5;">
+              <strong>CSAT de 4,68 vs Conclusão de 13,2%:</strong> Alunos adoram o conteúdo, mas abandonam devido a vídeos monótonos e cursos teóricos longos de 195 min.
+            </div>
+          </div>
+        </div>
+        <div class="bullet-box">
+          <div class="bullet-item">
+            <div class="bullet-icon">&check;</div>
+            <div><strong>Validação com 1.000 Comentários:</strong> 74% dos alunos atribuíram nota máxima (5 estrelas), confirmando que a evasão decorre de fadiga de formato, e não de insatisfação pedagógica.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 9 -->
+    <div class="slide" id="slide-9" data-notes="Para concluir, entregamos três ações estratégicas imediatas para a liderança da instituição: Primeira: Priorizar a produção de vídeos práticos e podcasts nas áreas de maior tração, como DevOps e Programação, que já provaram reter mais de 60% dos estudantes. Segunda: Intervir urgentemente nos materiais de Segurança & Governança, substituindo vídeos longos e monótonos por estudos de caso fragmentados. E terceira: Ativar em produção o motor de recomendação vetorial, que com seus 78% de precisão positiva consegue sugerir o próximo passo ideal antes que o aluno evada. A plataforma está 100% conteinerizada, documentada e com o dashboard operando em tempo real. Estamos prontos para as perguntas da banca. Muito obrigado.">
+      <span class="slide-tag">Slide 9 de 9 • Fechamento (~60s)</span>
+      <h1 class="slide-title">Recomendações Estratégicas para a Instituição</h1>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="stat-card emerald">
+            <div class="stat-lbl">Ação 1: Produção de Acervo</div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Priorizar Vídeos & Podcasts</div>
+            <div class="stat-sub">DevOps e Programação provaram reter até 61,5%. Expandir formatos ágeis de até 30 min.</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-lbl">Ação 2: Reformulação</div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Desmembrar Segurança</div>
+            <div class="stat-sub">Substituir vídeos densos de Segurança & Governança por microlearning e estudos de caso curtos.</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-lbl">Ação 3: Retenção Preditiva</div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Ativar Motor de IA</div>
+            <div class="stat-sub">Disparar recomendações de alta afinidade (78%) antes que o aluno em risco de evasão abandone a trilha.</div>
+          </div>
+        </div>
+
+        <div class="callout-box" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(16, 185, 129, 0.15)); border-color: rgba(99, 102, 241, 0.4);">
+          <div style="font-size: 1.05rem; font-weight: 600; color: #fff;">
+            🚀 <strong>Pipeline 100% Operacional no Docker:</strong> Solução completa em PostgreSQL, MongoDB, pgvector e Apache Superset validada para a banca.
+          </div>
+        </div>
+
+        <!-- Quick Access Hub to Superset -->
+        <div style="display: flex; gap: 0.85rem; justify-content: center; flex-wrap: wrap; margin-top: 0.25rem;">
+          <a href="http://localhost:8088/superset/dashboard/1/" target="_blank" class="btn btn-superset" style="padding: 0.6rem 1.25rem; font-size: 0.95rem;">
+            📊 Abrir Superset (Porta 8088)
+          </a>
+          <a href="http://localhost:8088/sqllab/" target="_blank" class="btn" style="padding: 0.6rem 1.25rem; font-size: 0.95rem;">
+            🔍 Consultas no SQL Lab
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <footer>
+    <div style="font-size: 0.85rem; color: #94a3b8; display: flex; align-items: center; gap: 0.5rem;">
+      <span>Atalhos:</span>
+      <kbd style="background: rgba(255,255,255,0.1); padding: 0.15rem 0.4rem; border-radius: 4px; font-family: monospace;">&larr;</kbd>
+      <kbd style="background: rgba(255,255,255,0.1); padding: 0.15rem 0.4rem; border-radius: 4px; font-family: monospace;">&rarr;</kbd>
+      <kbd style="background: rgba(255,255,255,0.1); padding: 0.15rem 0.4rem; border-radius: 4px; font-family: monospace;">Espaço</kbd>
+      <kbd style="background: rgba(255,255,255,0.1); padding: 0.15rem 0.4rem; border-radius: 4px; font-family: monospace;">N (Notas)</kbd>
+      <kbd style="background: rgba(255,255,255,0.1); padding: 0.15rem 0.4rem; border-radius: 4px; font-family: monospace;">C (Cheat)</kbd>
+      <kbd style="background: rgba(255,255,255,0.1); padding: 0.15rem 0.4rem; border-radius: 4px; font-family: monospace;">F (Tela Cheia)</kbd>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="nav-controls">
+      <span style="font-weight: 700; font-size: 0.95rem; margin-right: 0.5rem;" id="slideCounter">1 / 9</span>
+      <button class="btn" onclick="prevSlide()">Anterior</button>
+      <button class="btn btn-primary" onclick="nextSlide()">Próximo &rarr;</button>
+    </div>
+  </footer>
+
+  <!-- Speaker Notes Drawer -->
+  <div class="drawer" id="notesDrawer">
+    <div class="drawer-header">
+      <div class="drawer-title">🎙️ Fala Sugerida para este Slide (Notas do Apresentador)</div>
+      <button class="btn" onclick="toggleNotes()">Fechar (N)</button>
+    </div>
+    <p class="drawer-text" id="notesContent"></p>
+  </div>
+
+
+
+  <!-- Modal Cheat Sheet -->
+  <div class="modal-backdrop" id="cheatModal" onclick="closeModalOnBg(event)">
+    <div class="modal-content">
+      <button class="close-modal" onclick="closeModal('cheatModal')">&times;</button>
+      <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 1.25rem; color: #fff;">📋 Folha de Apoio Rápido (Cheat Sheet da Banca)</h2>
+      
+      <!-- Docker URLs -->
+      <div style="margin-bottom: 1.5rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 12px; padding: 1rem 1.25rem;">
+        <h3 style="font-size: 1rem; color: var(--accent-blue); margin-bottom: 0.5rem;">🌐 URLs e Serviços Docker Ativos</h3>
+        <div class="grid-2" style="gap: 0.65rem; font-size: 0.85rem;">
+          <div>
+            <span style="color: #94a3b8;">📑 Apresentação Web:</span><br>
+            <a href="http://localhost:8085/" target="_blank" style="color: #38bdf8; font-weight: 600; text-decoration: none;">http://localhost:8085/</a>
+          </div>
+          <div>
+            <span style="color: #94a3b8;">📊 Superset Dashboard:</span><br>
+            <a href="http://localhost:8088/superset/dashboard/1/" target="_blank" style="color: #38bdf8; font-weight: 600; text-decoration: none;">http://localhost:8088/superset/dashboard/1/</a>
+          </div>
+          <div>
+            <span style="color: #94a3b8;">🔍 Superset SQL Lab:</span><br>
+            <a href="http://localhost:8088/sqllab/" target="_blank" style="color: #38bdf8; font-weight: 600; text-decoration: none;">http://localhost:8088/sqllab/</a>
+          </div>
+          <div>
+            <span style="color: #94a3b8;">🔑 Credenciais Superset:</span><br>
+            <span style="color: #fff; font-family: monospace;">admin / admin</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; color: var(--accent-blue); margin-bottom: 0.75rem;">Números de Bolso</h3>
+        <div class="grid-3" style="gap: 0.75rem;">
+          <div style="background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 8px;">
+            <div style="font-size: 0.8rem; color: #94a3b8;">Usuários / Conteúdos</div>
+            <div style="font-weight: 700; color: #fff;">150 alunos • 1.000 itens</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 8px;">
+            <div style="font-size: 0.8rem; color: #94a3b8;">Avaliação Média (CSAT)</div>
+            <div style="font-weight: 700; color: #fff;">4,48 / 5,00</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 8px;">
+            <div style="font-size: 0.8rem; color: #94a3b8;">Taxa de Conclusão Global</div>
+            <div style="font-weight: 700; color: #fff;">28,62% (154 conclusões)</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 8px;">
+            <div style="font-size: 0.8rem; color: #94a3b8;">Tempo Médio de Consumo</div>
+            <div style="font-weight: 700; color: #fff;">144,9 min (Geral)</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 8px;">
+            <div style="font-size: 0.8rem; color: #94a3b8;">Recomendações no Lote</div>
+            <div style="font-weight: 700; color: #fff;">744 (78% com score &ge; 70)</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 8px;">
+            <div style="font-size: 0.8rem; color: #94a3b8;">Seletividade do Motor</div>
+            <div style="font-weight: 700; color: #fff;">1,96% (744 de 38.007)</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="font-size: 1.1rem; color: var(--accent-amber); margin-bottom: 0.75rem;">Respostas Prontas para a Banca</h3>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div style="background: rgba(255,255,255,0.03); padding: 0.85rem; border-radius: 8px; border-left: 3px solid var(--accent-indigo);">
+            <strong>P: Por que a taxa global (28,6%) difere de DevOps (42,6%)?</strong><br>
+            <span style="color: #cbd5e1; font-size: 0.9rem;">R: A taxa global consolida todos os 538 inícios/visualizações. Categorias práticas como DevOps têm alta conversão, enquanto trilhas densas como Segurança (13,1%) puxam a média global para baixo.</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 0.85rem; border-radius: 8px; border-left: 3px solid var(--accent-emerald);">
+            <strong>P: 1,96% de seletividade não é restritivo demais?</strong><br>
+            <span style="color: #cbd5e1; font-size: 0.9rem;">R: Pelo contrário, 744 sugestões representam cerca de 5 recomendações hiper-personalizadas por aluno. O motor filtrou 37.109 combinações sem sentido ou já concluídas para evitar ruído.</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 0.85rem; border-radius: 8px; border-left: 3px solid var(--accent-blue);">
+            <strong>P: Por que 83,7% dos comentários foram corrigidos?</strong><br>
+            <span style="color: #cbd5e1; font-size: 0.9rem;">R: Havia strings com espaços excessivos, notas fora de escala e tags opcionais no MongoDB. O script sanitizou os dados sem descartar nenhum registro.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 9;
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let timerRunning = false;
+
+    function showSlide(index) {
+      if (index < 1) index = 1;
+      if (index > totalSlides) index = totalSlides;
+      currentSlide = index;
+
+      document.querySelectorAll('.slide').forEach((el, i) => {
+        el.classList.toggle('active', i + 1 === currentSlide);
+      });
+
+      document.getElementById('slideCounter').innerText = `${currentSlide} / ${totalSlides}`;
+      document.getElementById('progressFill').style.width = `${(currentSlide / totalSlides) * 100}%`;
+
+      const activeSlideEl = document.getElementById(`slide-${currentSlide}`);
+      const notes = activeSlideEl.getAttribute('data-notes') || 'Sem notas para este slide.';
+      document.getElementById('notesContent').innerText = notes;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        showSlide(currentSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        showSlide(currentSlide - 1);
+      }
+    }
+
+    function toggleNotes() {
+      document.getElementById('notesDrawer').classList.toggle('open');
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    function closeModalOnBg(e) {
+      if (e.target.classList.contains('modal-backdrop')) {
+        e.target.classList.remove('open');
+      }
+    }
+
+    function setSlide4Mode(mode) {
+      const kiosk = document.getElementById('slide4KioskContainer');
+      const backup = document.getElementById('slide4BackupContainer');
+      const btnKiosk = document.getElementById('btnModeKiosk');
+      const btnBackup = document.getElementById('btnModeBackup');
+
+      if (!kiosk || !backup) return;
+
+      if (mode === 'kiosk') {
+        kiosk.style.display = 'block';
+        backup.style.display = 'none';
+        btnKiosk.classList.add('btn-superset');
+        btnBackup.classList.remove('btn-superset');
+        btnBackup.style.borderColor = 'rgba(255,255,255,0.2)';
+      } else {
+        kiosk.style.display = 'none';
+        backup.style.display = 'block';
+        btnBackup.classList.add('btn-superset');
+        btnKiosk.classList.remove('btn-superset');
+        btnKiosk.style.borderColor = 'rgba(255,255,255,0.2)';
+      }
+    }
+
+    function startTimer() {
+      if (!timerRunning) {
+        timerRunning = true;
+        timerInterval = setInterval(() => {
+          timerSeconds++;
+          const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+          const secs = String(timerSeconds % 60).padStart(2, '0');
+          const el = document.getElementById('timerDisplay');
+          el.innerText = `${mins}:${secs}`;
+          if (timerSeconds >= 510) { // 8m30s
+            el.style.color = '#f43f5e';
+          }
+        }, 1000);
+      }
+    }
+
+    function pauseTimer() {
+      timerRunning = false;
+      clearInterval(timerInterval);
+    }
+
+    function toggleTimer() {
+      if (timerRunning) pauseTimer();
+      else startTimer();
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key.toLowerCase() === 'n') {
+        toggleNotes();
+      } else if (e.key.toLowerCase() === 'c') {
+        const modal = document.getElementById('cheatModal');
+        if (modal.classList.contains('open')) closeModal('cheatModal');
+        else openModal('cheatModal');
+      } else if (e.key.toLowerCase() === 'f') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      } else if (e.key === 'Escape') {
+        closeModal('cheatModal');
+        document.getElementById('notesDrawer').classList.remove('open');
+      }
+    });
+
+    // Iniciar na carga
+    showSlide(1);
+    startTimer();
+  </script>
+</body>
+</html>
+"""
+
+def main():
+    workspace = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    slides_path = os.path.join(workspace, "slides.html")
+    index_path = os.path.join(workspace, "index.html")
+
+    with open(slides_path, "w", encoding="utf-8") as f:
+        f.write(HTML_CONTENT)
+    print(f"Salvo: {slides_path}")
+
+    with open(index_path, "w", encoding="utf-8") as f:
+        f.write(HTML_CONTENT)
+    print(f"Salvo: {index_path}")
+
+if __name__ == "__main__":
+    main()
